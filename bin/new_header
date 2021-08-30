@@ -1,0 +1,7 @@
+##fileformat=VCFv4.2
+##FILTER=<ID=PASS,Description="All filters passed">
+##INFO=<ID=BLOSUM,Number=1,Type=String,Description="Added from BLOSUM62 Matrix">
+##INFO=<ID=GRANTHAM,Number=1,Type=String,Description="Added from Grantham substitution table">
+##INFO=<ID=PERCENT_PROTEIN,Number=1,Type=String,Description="AA position relative to length of protein">
+##ALT=<ID=NON_REF,Description="Represents any possible alternative allele at this location">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
