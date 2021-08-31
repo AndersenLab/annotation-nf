@@ -17,18 +17,20 @@ params.cendr = true
 params.bin_bed = "${workflow.projectDir}/bin/bins_1kb_${params.species}.bed"
 params.ncsq_param = 224
 params.annotation = false
-params.divergent_regions = "/projects/b1059/data/c_elegans/WI/divergent_regions/20210121/divergent_regions_strain.bed"
+params.help = null
 
 if (params.debug) {
     params.vcf = "${workflow.projectDir}/test_data/WI.20201230.hard-filter.vcf.gz"
     params.sample_sheet = "${workflow.projectDir}/test_data/sample_sheet.tsv"
     params.bam_folder = "${workflow.projectDir}/test_data/bam"
     params.output = "annotation-${date}-debug"
+    params.divergent_regions = "${workflow.projectDir}/test_data/divergent_regions_strain.bed"
 
 } else {
     // Read input
     params.vcf = ""
     params.sample_sheet = ""
+    params.divergent_regions = ""
 
     // folder for the bam files. currently need to put all bam in the same folder
     params.bam_folder = "/projects/b1059/data/${params.species}/WI/alignments/"
@@ -76,7 +78,7 @@ params.bcsq_vcfanno_config = "${workflow.projectDir}/bin/vcfanno_bcsq.toml"
 if ( params.vcf==null ) error "Parameter --vcf is required. Specify path to the full vcf."
 if ( params.sample_sheet==null ) error "Parameter --sample_sheet is required. It should contain a column of strain names, a column of bam file names and a column of bai file names WITH NO HEADERS. If the bam and bai column do not contain full path to the files, specify that path with --bam_folder."
 if ( params.species==null ) error "Parameter --species is required. Please select c_elegans, c_briggsae, or c_tropicalis."
-
+if ( params.divergent_regions==null ) error "Parameter --divergent_regions is required. Please provide full path to output from post-gatk-nf."
 
 
 def log_summary() {

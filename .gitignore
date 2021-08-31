@@ -1,2 +1,4 @@
 .nextflow*
 ANALYSIS/*
+annotation-*
+pipeline-info/*
