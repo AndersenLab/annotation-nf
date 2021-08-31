@@ -23,7 +23,7 @@ if (params.debug) {
     params.vcf = "${workflow.projectDir}/test_data/WI.20201230.hard-filter.vcf.gz"
     params.sample_sheet = "${workflow.projectDir}/test_data/sample_sheet.tsv"
     params.bam_folder = "${workflow.projectDir}/test_data/bam"
-    params.output = "popgen-${date}-debug"
+    params.output = "annotation-${date}-debug"
 
 } else {
     // Read input
@@ -70,7 +70,7 @@ params.repeat_masker_bed = "${reference_dir}/lcr/${params.species}.${params.proj
 
 // "${params.reference_dir}/csq/${species}.${project}.${ws_build}.csq.gff3.gz" from DEC genomes-nf gives some error for transposons
 params.snpeff_vcfanno_config = "${workflow.projectDir}/bin/vcfanno_snpeff.toml"
-params.bcsq_vcfanno_config = "${workflow.projectDir}/bin/vcfanno.toml"
+params.bcsq_vcfanno_config = "${workflow.projectDir}/bin/vcfanno_bcsq.toml"
 
 // Note that params.species is set in the config to be c_elegans (default)
 if ( params.vcf==null ) error "Parameter --vcf is required. Specify path to the full vcf."
@@ -194,7 +194,7 @@ workflow {
     bcsq_tracks = Channel.from(["LOW", "HIGH"])
 
 	snpeff_annotate_vcf.out.snpeff_vcf.combine(snpeff_tracks) | snpeff_severity_tracks
-	//bcsq_annotate_vcf.out.bcsq_vcf.combine(bcsq_tracks) | bcsq_severity_tracks
+	make_flat_file.out.combine(bcsq_tracks) | bcsq_severity_tracks
 
 }
 
@@ -430,10 +430,13 @@ process make_flat_file {
         tuple file(bcsq_samples_parsed), file(div_file), file(bcsq_scores), file(wbgene_names)
 
     output:
-        path "WI-BCSQ-flatfile.tsv"
+        path "*.strain-annotation.bcsq.tsv"
 
     """
         Rscript --vanilla ${workflow.projectDir}/bin/make_flat_file.R $bcsq_samples_parsed $bcsq_scores $wbgene_names $div_file
+
+        # rename flatfile
+        mv WI-BCSQ-flatfile.tsv WI.${date}.strain-annotation.bcsq.tsv
     """
 
 }
@@ -538,7 +541,7 @@ process snpeff_severity_tracks {
 
     conda "/projects/b1059/software/conda_envs/popgen-nf_env"
 
-    publishDir "${params.output}/tracks", mode: 'copy'
+    publishDir "${params.output}/tracks/snpeff/", mode: 'copy'
 
     tag { severity }
 
@@ -561,24 +564,22 @@ process snpeff_severity_tracks {
 }
 
 
-// bcsq version is untested but should work. BCSQ doesn't label consequence as LOW, MODERATE, HIGH etc, Ryan is compiling a list that will match BCSQ label to Snpeff label, so we can still have a LOW track, a MODERATE track etc.
-// need to fix this so it works!
 process bcsq_severity_tracks {
 
     conda "/projects/b1059/software/conda_envs/popgen-nf_env"
 
-    publishDir "${params.output}/tracks", mode: 'copy'
+    publishDir "${params.output}/tracks/bcsq/", mode: 'copy'
 
     tag { severity }
 
     input:
-        tuple path("in.vcf.gz"), path("in.vcf.gz.tbi"), val(severity)
+        tuple path("flatfile"), val(severity)
     output:
         tuple file("${date}.${severity}.bed.gz"), file("${date}.${severity}.bed.gz.tbi")
 
     """
-        bcftools view in.vcf.gz | \
-        grep -x -f ${workflow.projectDir}/bin/${severity}.txt | \
+        cat ${flatfile} | \
+        grep ${severity} | \
         awk '\$0 !~ "^#" { print \$1 "\\t" (\$2 - 1) "\\t" (\$2)  "\\t" \$1 ":" \$2 "\\t0\\t+"  "\\t" \$2 - 1 "\\t" \$2 "\\t0\\t1\\t1\\t0" }' | \\
         bgzip  > ${date}.${severity}.bed.gz
         tabix -p bed ${date}.${severity}.bed.gz
