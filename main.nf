@@ -21,7 +21,7 @@ params.help = null
 
 if (params.debug) {
     params.vcf = "${workflow.projectDir}/test_data/WI.20201230.hard-filter.vcf.gz"
-    params.sample_sheet = "${workflow.projectDir}/test_data/sample_sheet.tsv"
+    //params.sample_sheet = "${workflow.projectDir}/test_data/sample_sheet.tsv"
     params.bam_folder = "${workflow.projectDir}/test_data/bam"
     params.output = "annotation-${date}-debug"
     params.divergent_regions = "${workflow.projectDir}/test_data/divergent_regions_strain.bed"
@@ -29,7 +29,7 @@ if (params.debug) {
 } else {
     // Read input
     params.vcf = ""
-    params.sample_sheet = ""
+    //params.sample_sheet = ""
     params.divergent_regions = ""
 
     // folder for the bam files. currently need to put all bam in the same folder
@@ -76,7 +76,7 @@ params.bcsq_vcfanno_config = "${workflow.projectDir}/bin/vcfanno_bcsq.toml"
 
 // Note that params.species is set in the config to be c_elegans (default)
 if ( params.vcf==null ) error "Parameter --vcf is required. Specify path to the full vcf."
-if ( params.sample_sheet==null ) error "Parameter --sample_sheet is required. It should contain a column of strain names, a column of bam file names and a column of bai file names WITH NO HEADERS. If the bam and bai column do not contain full path to the files, specify that path with --bam_folder."
+//if ( params.sample_sheet==null ) error "Parameter --sample_sheet is required. It should contain a column of strain names, a column of bam file names and a column of bai file names WITH NO HEADERS. If the bam and bai column do not contain full path to the files, specify that path with --bam_folder."
 if ( params.species==null ) error "Parameter --species is required. Please select c_elegans, c_briggsae, or c_tropicalis."
 if ( params.divergent_regions==null ) error "Parameter --divergent_regions is required. Please provide full path to output from post-gatk-nf."
 
@@ -139,9 +139,9 @@ isotype_convert_table = Channel.fromPath("${workflow.projectDir}/bin/ref_strain_
 
 // Read sample sheet
 // No header. Columns are strain name, bam and bai
-sample_sheet = Channel.fromPath(params.sample_sheet)
-                       .splitCsv(sep: "\t")
-                      .map { row -> [ row[0], row[1] ]}
+// sample_sheet = Channel.fromPath(params.sample_sheet)
+//                        .splitCsv(sep: "\t")
+//                       .map { row -> [ row[0], row[1] ]}
 
 
 workflow { 
