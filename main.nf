@@ -195,8 +195,11 @@ workflow {
 	snpeff_tracks = Channel.from(["LOW", "MODERATE", "HIGH", "MODIFIER"])  
     bcsq_tracks = Channel.from(["LOW", "HIGH"])
 
+    // dont need these anymore
+    /*
 	snpeff_annotate_vcf.out.snpeff_vcf.combine(snpeff_tracks) | snpeff_severity_tracks
 	make_flat_file.out.combine(bcsq_tracks) | bcsq_severity_tracks
+    */
 
 }
 
@@ -287,6 +290,7 @@ process prep_other_annotation {
 
     conda "/projects/b1059/software/conda_envs/popgen-nf-r_env"
     echo true
+    memory 16.GB
 
     input:
         tuple path("WI-BCSQ.tsv"), path("gff_AA_Length.tsv"), path("AA_Scores.tsv")
@@ -309,6 +313,8 @@ process AA_annotate_vcf {
 
     publishDir "${params.output}/variation", mode: 'copy'
 
+    memory 16.GB
+
     input:
         tuple file(vcf), file(vcf_index), file("anno_vcf.vcf"), file(vcfanno), \
         file("dust.bed.gz"), file("dust.bed.gz.tbi"), file("repeat_masker.bed.gz"), file("repeat_masker.bed.gz.tbi")
@@ -319,7 +325,7 @@ process AA_annotate_vcf {
 
 
     """
-        output_vcf=`basename ${params.vcf} | sed 's/hard-filter.vcf.gz/hard-filter.isotype.bcsq.vcf.gz/'`
+        output_vcf=`basename ${params.vcf} | sed 's/hard-filter.isotype.vcf.gz/hard-filter.isotype.bcsq.vcf.gz/'`
 
         bcftools reheader -h ${workflow.projectDir}/bin/new_header anno_vcf.vcf > header_anno_vcf.vcf
         bgzip header_anno_vcf.vcf
@@ -406,7 +412,7 @@ process bcsq_parse_samples {
 
     conda "/projects/b1059/software/conda_envs/popgen-nf-r_env"
 
-    memory 16.GB
+    memory 64.GB
 
     input:
         tuple file(bcsq_samples), file(div_file)
