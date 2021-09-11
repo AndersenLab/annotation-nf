@@ -22,7 +22,6 @@ params.help = null
 if (params.debug) {
     params.vcf = "${workflow.projectDir}/test_data/WI.20201230.hard-filter.vcf.gz"
     //params.sample_sheet = "${workflow.projectDir}/test_data/sample_sheet.tsv"
-    params.bam_folder = "${workflow.projectDir}/test_data/bam"
     params.output = "annotation-${date}-debug"
     params.divergent_regions = "${workflow.projectDir}/test_data/divergent_regions_strain.bed"
 
@@ -106,11 +105,9 @@ nextflow main.nf -profile quest --vcf=hard-filtered.vcf --sample_sheet=sample_sh
     --debug              Set to 'true' to test                                    ${params.debug}
     --species            Species: 'c_elegans', 'c_tropicalis' or 'c_briggsae'     ${params.species}
     --vcf                hard filtered vcf to calculate variant density           ${params.vcf}
-    --sample_sheet       TSV with column iso-ref strain, bam, bai. no header      ${params.sample_sheet}
+    --divergent_regions  Divergent region bed file                                ${params.divergent_regions}
+    --reference          Reference used based on species and project              ${params.reference}
     --output             (Optional) output folder name                            ${params.output}
-    --cendr              Option to create strain-specific vcf for CeNDR           ${params.cendr}
-    --dust           ${params.dust_bed}
-    --ref ${params.reference}
  
     username                                                                      ${"whoami".execute().in.text}
 
