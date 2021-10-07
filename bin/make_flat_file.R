@@ -1,6 +1,8 @@
 library(data.table)
 library(rebus)
-library(tidyverse)
+library(dplyr)
+library(tidyr)
+library(readr)
 library(fuzzyjoin)
 library(IRanges)
 

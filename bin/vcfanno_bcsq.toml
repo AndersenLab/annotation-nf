@@ -3,3 +3,15 @@ file="REPLACE_HEADER_VCF"
 fields = ["BLOSUM", "GRANTHAM", "PERCENT_PROTEIN"]
 ops=["self", "self", "self"]
 names=["BLOSUM", "GRANTHAM", "PERCENT_PROTEIN"]
+
+[[annotation]]
+file="dust.bed.gz"
+columns = [4]
+names=["dust"]
+ops=["flag"]
+
+[[annotation]]
+file="repeat_masker.bed.gz"
+columns = [4]
+names=["repeat_masker"]
+ops=["flag"]

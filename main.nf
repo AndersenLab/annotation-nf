@@ -11,12 +11,7 @@ nextflow.preview.dsl=2
 
 date = new Date().format( 'yyyyMMdd' )
 contigs = Channel.from("I","II","III","IV","V","X")
-params.cendr = true
-// 1kb bins for all chromosomes
-// params.species is defined in quest.config, and in order to match genome folder name, which uses c_elegans, the bin bed file also used c_elegans instead of ce
-params.bin_bed = "${workflow.projectDir}/bin/bins_1kb_${params.species}.bed"
 params.ncsq_param = 224
-params.annotation = false
 params.help = null
 
 if (params.debug) {
@@ -63,15 +58,25 @@ params.csq_gff = "${reference_dir}/csq/${params.species}.${params.project}.${par
 params.AA_score = "${reference_dir}/csq/${params.species}.${params.project}.${params.ws_build}.AA_Scores.tsv"
 params.AA_length = "${reference_dir}/csq/${params.species}.${params.project}.${params.ws_build}.AA_Length.tsv"
 
-params.dust_bed = "${reference_dir}/lcr/${params.species}.${params.project}.${params.ws_build}.dust.bed.gz"
-params.repeat_masker_bed = "${reference_dir}/lcr/${params.species}.${params.project}.${params.ws_build}.repeat_masker.bed.gz"
+if(params.species == "c_elegans") {
+    params.dust_bed = "${reference_dir}/lcr/${params.species}.${params.project}.${params.ws_build}.dust.bed.gz"
+    params.repeat_masker_bed = "${reference_dir}/lcr/${params.species}.${params.project}.${params.ws_build}.repeat_masker.bed.gz"
+} else {
+    params.dust_bed = "/projects/b1059/data/c_tropicalis/WI/divergent_regions/20210901/divergent_regions_strain.bed"
+    params.repeat_masker_bed = "/projects/b1059/data/c_tropicalis/WI/divergent_regions/20210901/divergent_regions_strain.bed"
+}
+
 
 
 // Variant annotation files. The same for debug or normal run. 
 
 // "${params.reference_dir}/csq/${species}.${project}.${ws_build}.csq.gff3.gz" from DEC genomes-nf gives some error for transposons
 params.snpeff_vcfanno_config = "${workflow.projectDir}/bin/vcfanno_snpeff.toml"
-params.bcsq_vcfanno_config = "${workflow.projectDir}/bin/vcfanno_bcsq.toml"
+if(params.species == "c_elegans") {
+    params.bcsq_vcfanno_config = "${workflow.projectDir}/bin/vcfanno_bcsq.toml"
+} else {
+    params.bcsq_vcfanno_config = "${workflow.projectDir}/bin/vcfanno_bcsq_ct_cb.toml"
+}
 
 // Note that params.species is set in the config to be c_elegans (default)
 if ( params.vcf==null ) error "Parameter --vcf is required. Specify path to the full vcf."
@@ -134,13 +139,6 @@ input_vcf_index = Channel.fromPath("${params.vcf}.tbi")
 // To convert ref strain to isotype names. Note only strains that match the first col will get changed, so won't impact ct and cb.
 isotype_convert_table = Channel.fromPath("${workflow.projectDir}/bin/ref_strain_isotype.tsv") 
 
-// Read sample sheet
-// No header. Columns are strain name, bam and bai
-// sample_sheet = Channel.fromPath(params.sample_sheet)
-//                        .splitCsv(sep: "\t")
-//                       .map { row -> [ row[0], row[1] ]}
-
-
 workflow { 
 
     // snpeff annotation
@@ -161,6 +159,8 @@ workflow {
       .combine(Channel.fromPath(params.AA_length))
       .combine(Channel.fromPath(params.AA_score)) | prep_other_annotation
 
+
+    // if not celegans, use different vcfanno file without dust bed
     bcsq_annotate_vcf.out.bcsq_vcf
       .combine(prep_other_annotation.out)
       .combine(Channel.fromPath(params.bcsq_vcfanno_config))
@@ -168,6 +168,7 @@ workflow {
       .combine(Channel.fromPath(params.dust_bed + ".tbi"))
       .combine(Channel.fromPath(params.repeat_masker_bed))
       .combine(Channel.fromPath(params.repeat_masker_bed + ".tbi")) | AA_annotate_vcf
+    
 
     // parse bcsq annotation to make flat file
     AA_annotate_vcf.out.vcfanno_vcf | bcsq_extract_scores | bcsq_parse_scores
@@ -242,8 +243,15 @@ process snpeff_annotate_vcf {
         ${params.snpeff_reference} | \\
         bcftools view -O z > out.vcf.gz
 
-        vcfanno ${vcfanno} out.vcf.gz | bcftools view -O z > \${output}
-        bcftools index --tbi \${output}
+
+        if [ ${params.species} = "c_elegans" ]
+        then
+            vcfanno ${vcfanno} out.vcf.gz | bcftools view -O z > \${output}
+            bcftools index --tbi \${output}
+        else
+            mv out.vcf.gz \${output}
+            bcftools index --tbi \${output}
+        fi
     """
 
 }

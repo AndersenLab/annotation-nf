@@ -1,0 +1,5 @@
+[[annotation]]
+file="REPLACE_HEADER_VCF"
+fields = ["BLOSUM", "GRANTHAM", "PERCENT_PROTEIN"]
+ops=["self", "self", "self"]
+names=["BLOSUM", "GRANTHAM", "PERCENT_PROTEIN"]
