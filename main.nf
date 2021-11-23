@@ -22,9 +22,9 @@ if (params.debug) {
 
 } else {
     // Read input
-    params.vcf = ""
+    params.vcf = null
     //params.sample_sheet = ""
-    params.divergent_regions = ""
+    params.divergent_regions = null
 
     // folder for the bam files. currently need to put all bam in the same folder
     params.bam_folder = "/projects/b1059/data/${params.species}/WI/alignments/"
@@ -82,7 +82,7 @@ if(params.species == "c_elegans") {
 if ( params.vcf==null ) error "Parameter --vcf is required. Specify path to the full vcf."
 //if ( params.sample_sheet==null ) error "Parameter --sample_sheet is required. It should contain a column of strain names, a column of bam file names and a column of bai file names WITH NO HEADERS. If the bam and bai column do not contain full path to the files, specify that path with --bam_folder."
 if ( params.species==null ) error "Parameter --species is required. Please select c_elegans, c_briggsae, or c_tropicalis."
-if ( params.divergent_regions==null ) error "Parameter --divergent_regions is required. Please provide full path to output from post-gatk-nf."
+if ( params.divergent_regions==null ) println "Parameter --divergent_regions is ignored."
 
 
 def log_summary() {
@@ -101,9 +101,9 @@ Should work for c.e, c.b, c.t since they all have the same number of chromosomes
 ANNOTATION-NF
 -------------
 
-nextflow main.nf -profile quest --debug=true
+nextflow main.nf --debug
 
-nextflow main.nf -profile quest --vcf=hard-filtered.vcf --sample_sheet=sample_sheet.tsv --bam_folder=/path/bam_folder --species=c_elegans 
+nextflow main.nf --vcf=hard-filtered.vcf --species=c_elegans --divergent_regions=divergent_regions_strain.bed
 
     parameters           description                                              Set/Default
     ==========           ===========                                              ========================
@@ -116,7 +116,7 @@ nextflow main.nf -profile quest --vcf=hard-filtered.vcf --sample_sheet=sample_sh
  
     username                                                                      ${"whoami".execute().in.text}
 
-    HELP: http://andersenlab.org/dry-guide/pipeline-postGATK   
+    HELP: http://andersenlab.org/dry-guide/pipeline-annotation-nf   
     ----------------------------------------------------------------------------------------------
     Git info: $workflow.repository - $workflow.revision [$workflow.commitId] 
 """
@@ -172,8 +172,14 @@ workflow {
 
     // parse bcsq annotation to make flat file
     AA_annotate_vcf.out.vcfanno_vcf | bcsq_extract_scores | bcsq_parse_scores
-    AA_annotate_vcf.out.vcfanno_vcf
-        .combine(Channel.fromPath(params.divergent_regions)) | bcsq_extract_samples | bcsq_parse_samples
+
+    if(params.divergent_regions) {
+        AA_annotate_vcf.out.vcfanno_vcf
+            .combine(Channel.fromPath(params.divergent_regions)) | bcsq_extract_samples | bcsq_parse_samples
+    } else {
+        AA_annotate_vcf.out.vcfanno_vcf | bcsq_extract_samples | bcsq_parse_samples
+    }
+    
 
     bcsq_parse_samples.out
     	.combine(bcsq_parse_scores.out)
@@ -277,7 +283,7 @@ process bcsq_annotate_vcf {
     """
         # bgzip -c $gff > csq.gff.gz
         cp $gff csq.gff.gz
-        tabix -p gff csq.gff.gz
+        # tabix -p gff csq.gff.gz
 
         bcftools csq -O z --fasta-ref ${params.reference} \\
                      --gff-annot csq.gff.gz \\
@@ -435,9 +441,11 @@ process make_flat_file {
 
 
     conda "/projects/b1059/software/conda_envs/popgen-nf-r_env"
-    publishDir "${params.output}", mode: 'copy'
+    publishDir "${params.output}/variation", mode: 'copy'
 
-    memory 16.GB
+    //memory 16.GB
+
+    memory 48.GB
 
     input:
         tuple file(bcsq_samples_parsed), file(div_file), file(bcsq_scores), file(wbgene_names)
@@ -446,7 +454,7 @@ process make_flat_file {
         path "*.strain-annotation.bcsq.tsv"
 
     """
-        Rscript --vanilla ${workflow.projectDir}/bin/make_flat_file.R $bcsq_samples_parsed $bcsq_scores $wbgene_names $div_file
+        Rscript --vanilla ${workflow.projectDir}/bin/make_flat_file.R $bcsq_samples_parsed $bcsq_scores $wbgene_names $div_file ${params.species}
 
         # rename flatfile
         mv WI-BCSQ-flatfile.tsv WI.${date}.strain-annotation.bcsq.tsv
@@ -485,7 +493,7 @@ process generate_strain_vcf {
 
     tag { strain }
 
-    publishDir "${params.output}/strain/vcf", mode: 'copy', pattern: "*.vcf.gz*"
+    publishDir "${params.output}/strain_vcf", mode: 'copy', pattern: "*.vcf.gz*"
 
     input:
         tuple val(strain), path(vcf), file(vcf_index)

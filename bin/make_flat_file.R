@@ -124,29 +124,35 @@ table_ready <- impacted %>%
 ###################
 # add divergent region flat
 
-divergent <- data.table::fread(args[4], 
-                         col.names = c("chrom", "start", "end"))
+if(args[5] == "c_elegans") {
+    divergent <- data.table::fread(args[4], 
+                                   col.names = c("chrom", "start", "end"))
+    
+    #Condense Overlapping Regions (If portion of regions shared by >1 strian
+    condensed <- divergent %>%
+      dplyr::mutate(DIVERGENT = "D") # Add marker to Divergent Region
+    
+    #Join the data - if a position is within a divergent region Divergent tag is added
+    
+    test <- table_ready %>%
+      dplyr::mutate(start = POS, end = POS)
+    join <- fuzzyjoin::genome_join(test, condensed, by = c(
+      "CHROM" = "chrom", 
+      "start" = "start", 
+      "end" = "end"), 
+      mode = "left") %>%
+      dplyr::select(-start.x, -start.y, -end.x, -end.y, -chrom)
+    
+    # join <- fuzzyjoin::genome_join(table_ready, condensed,  by = c(
+    #   "CHROM" = "chrom",
+    #   "POS" = "start",
+    #   "POS" = "end"),
+    #   mode = "left") %>%
+    #   select(-chrom, -start, -end)
+} else {
+    join <- table_ready %>%
+        dplyr::mutate(DIVERGENT = NA)
+}
 
-#Condense Overlapping Regions (If portion of regions shared by >1 strian
-condensed <- divergent %>%
-  dplyr::mutate(DIVERGENT = "D") # Add marker to Divergent Region
-
-#Join the data - if a position is within a divergent region Divergent tag is added
-
-test <- table_ready %>%
-  dplyr::mutate(start = POS, end = POS)
-join <- fuzzyjoin::genome_join(test, condensed, by = c(
-  "CHROM" = "chrom", 
-  "start" = "start", 
-  "end" = "end"), 
-  mode = "left") %>%
-  dplyr::select(-start.x, -start.y, -end.x, -end.y, -chrom)
-
-# join <- fuzzyjoin::genome_join(table_ready, condensed,  by = c(
-#   "CHROM" = "chrom",
-#   "POS" = "start",
-#   "POS" = "end"),
-#   mode = "left") %>%
-#   select(-chrom, -start, -end)
 
 readr::write_tsv(join, "WI-BCSQ-flatfile.tsv" )
