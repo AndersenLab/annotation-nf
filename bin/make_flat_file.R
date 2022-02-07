@@ -47,12 +47,12 @@ cleaned_flat_file <- clean_flat_file(strain_variant_score)
 ##################
 # add gene name
 name_key <- data.table::fread(args[3]) %>%
-  dplyr::select(wbgeneID, public_name)
+  dplyr::select(wbgene, gene_name)
 
 add_gene <- cleaned_flat_file %>%
-  dplyr::left_join(name_key, by = c( "GENE" = "wbgeneID")) %>%
+  dplyr::left_join(name_key, by = c( "GENE" = "wbgene")) %>%
   dplyr::rename("WORMBASE_ID" = "GENE") %>% 
-  dplyr::rename("GENE" = "public_name")
+  dplyr::rename("GENE" = "gene_name")
 
 
 # data.table::fwrite(add_gene, "~/projects/b1059/projects/Ryan/csq/flat_file/WI.20210121.hard-filter.isotype.bcsq.20210401.pre.flatfile-gene.tsv")

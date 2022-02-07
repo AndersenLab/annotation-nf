@@ -183,7 +183,8 @@ workflow {
 
     bcsq_parse_samples.out
     	.combine(bcsq_parse_scores.out)
-    	.combine(Channel.fromPath("${workflow.projectDir}/bin/wormbase_name_key.txt")) | make_flat_file
+        .combine(Channel.fromPath("${reference_dir}/csq/${params.species}.gff")) | make_flat_file
+    	// .combine(Channel.fromPath("${workflow.projectDir}/bin/wormbase_name_key.txt")) | make_flat_file
 
       
 	// Generate Strain-level TSV and VCFs. 
