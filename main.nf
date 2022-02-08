@@ -9,15 +9,15 @@ nextflow.preview.dsl=2
 // NXF_VER=20.01.0" Require later version of nextflow
 //assert System.getenv("NXF_VER") == "20.01.0"
 
-date = new Date().format( 'yyyyMMdd' )
+params.date = new Date().format( 'yyyyMMdd' )
 contigs = Channel.from("I","II","III","IV","V","X")
 params.ncsq_param = 224
 params.help = null
 
 if (params.debug) {
-    params.vcf = "${workflow.projectDir}/test_data/WI.20201230.hard-filter.vcf.gz"
+    params.vcf = "${workflow.projectDir}/test_data/WI.20201230.hard-filter.isotype.vcf.gz"
     //params.sample_sheet = "${workflow.projectDir}/test_data/sample_sheet.tsv"
-    params.output = "annotation-${date}-debug"
+    params.output = "annotation-${params.date}-debug"
     params.divergent_regions = "${workflow.projectDir}/test_data/divergent_regions_strain.bed"
 
 } else {
@@ -29,13 +29,13 @@ if (params.debug) {
     // folder for the bam files. currently need to put all bam in the same folder
     params.bam_folder = "/projects/b1059/data/${params.species}/WI/alignments/"
 
-    params.output = "annotation-${date}"
+    params.output = "annotation-${params.date}"
 }
 
 // set default project and ws build for species
 if(params.species == "c_elegans") {
     params.project="PRJNA13758"
-    params.ws_build="WS276"
+    params.ws_build="WS283"
 } else if(params.species == "c_briggsae") {
     params.project="QX1410_nanopore"
     params.ws_build="Feb2020"
@@ -183,7 +183,8 @@ workflow {
 
     bcsq_parse_samples.out
     	.combine(bcsq_parse_scores.out)
-        .combine(Channel.fromPath("${reference_dir}/csq/${params.species}.gff")) | make_flat_file
+        .combine(Channel.fromPath("${reference_dir}/csq/${params.species}.gff"))
+        .combine(snpeff_annotate_vcf.out.snpeff_flat) | make_flat_file
     	// .combine(Channel.fromPath("${workflow.projectDir}/bin/wormbase_name_key.txt")) | make_flat_file
 
       
@@ -220,7 +221,8 @@ process snpeff_annotate_vcf {
 
     conda "/projects/b1059/software/conda_envs/popgen-nf_env"
 
-    publishDir "${params.output}/variation", mode: 'copy'
+    publishDir "${params.output}/variation", mode: 'copy', pattern: '*.snpeff.vcf*'
+    publishDir "${params.output}/variation", mode: 'copy', pattern: 'snpeff.stats.csv'
 
     input:
         tuple file(vcf), file(vcf_index), \
@@ -233,12 +235,11 @@ process snpeff_annotate_vcf {
     output:
         tuple path("*.snpeff.vcf.gz"), path("*.snpeff.vcf.gz.tbi"), emit: snpeff_vcf
         path "snpeff.stats.csv"
+        path "WI-snpeff.tsv", emit: snpeff_flat
 
 
     script:
     """
-        output=`echo ${vcf} | sed 's/.vcf.gz/.snpeff.vcf.gz/'`
-
         bcftools view -O v ${vcf} | \\
         snpEff eff -csvStats snpeff.stats.csv \\
                    -no-downstream \\
@@ -253,12 +254,15 @@ process snpeff_annotate_vcf {
 
         if [ ${params.species} = "c_elegans" ]
         then
-            vcfanno ${vcfanno} out.vcf.gz | bcftools view -O z > \${output}
-            bcftools index --tbi \${output}
+            vcfanno ${vcfanno} out.vcf.gz | bcftools view -O z > WI.${params.date}.hard-filter.isotype.snpeff.vcf.gz
+            bcftools index --tbi WI.${params.date}.hard-filter.isotype.snpeff.vcf.gz
         else
-            mv out.vcf.gz \${output}
-            bcftools index --tbi \${output}
+            mv out.vcf.gz WI.${params.date}.hard-filter.isotype.snpeff.vcf.gz
+            bcftools index --tbi WI.${params.date}.hard-filter.isotype.snpeff.vcf.gz
         fi
+
+        bcftools query -e 'INFO/ANN="."' -f'%CHROM %POS %ID %REF %ALT %QUAL %FILTER %ANN\n' WI.${params.date}.hard-filter.isotype.snpeff.vcf.gz > WI-snpeff.tsv
+
     """
 
 }
@@ -337,8 +341,6 @@ process AA_annotate_vcf {
 
 
     """
-        output_vcf=`basename ${params.vcf} | sed 's/hard-filter.isotype.vcf.gz/hard-filter.isotype.bcsq.vcf.gz/'`
-
         bcftools reheader -h ${workflow.projectDir}/bin/new_header anno_vcf.vcf > header_anno_vcf.vcf
         bgzip header_anno_vcf.vcf
 		bcftools index -t header_anno_vcf.vcf.gz
@@ -346,9 +348,9 @@ process AA_annotate_vcf {
         # change vcfanno config
         cat ${vcfanno} | sed 's/REPLACE_HEADER_VCF/header_anno_vcf.vcf.gz/' > vcfanno.config
 
-		vcfanno vcfanno.config $vcf | bcftools view -O z > \${output_vcf}
-        bcftools index --tbi \${output_vcf}
-        bcftools stats -s- \${output_vcf} > \${output_vcf}.stats.txt
+		vcfanno vcfanno.config $vcf | bcftools view -O z > WI.${params.date}.hard-filter.isotype.bcsq.vcf.gz
+        bcftools index --tbi WI.${params.date}.hard-filter.isotype.bcsq.vcf.gz
+        bcftools stats -s- WI.${params.date}.hard-filter.isotype.bcsq.vcf.gz > WI.${params.date}.hard-filter.isotype.bcsq.vcf.gz.stats.txt
 
     """
 }
@@ -449,16 +451,16 @@ process make_flat_file {
     memory 48.GB
 
     input:
-        tuple file(bcsq_samples_parsed), file(div_file), file(bcsq_scores), file(wbgene_names)
+        tuple file(bcsq_samples_parsed), file(div_file), file(bcsq_scores), file(wbgene_names), file(snpeff)
 
     output:
-        path "*.strain-annotation.bcsq.tsv"
+        path "*.strain-annotation.tsv"
 
     """
-        Rscript --vanilla ${workflow.projectDir}/bin/make_flat_file.R $bcsq_samples_parsed $bcsq_scores $wbgene_names $div_file ${params.species}
+        Rscript --vanilla ${workflow.projectDir}/bin/make_flat_file.R $bcsq_samples_parsed $bcsq_scores $wbgene_names $div_file ${snpeff} ${params.species}
 
         # rename flatfile
-        mv WI-BCSQ-flatfile.tsv WI.${date}.strain-annotation.bcsq.tsv
+        mv WI-annotated-flatfile.tsv WI.${params.date}.strain-annotation.tsv
     """
 
 }
@@ -500,13 +502,25 @@ process generate_strain_vcf {
         tuple val(strain), path(vcf), file(vcf_index)
 
     output:
-        tuple path("${strain}.${date}.vcf.gz"),  path("${strain}.${date}.vcf.gz.tbi"), path("${strain}.${date}.vcf.gz.csi")
+        path("*.vcf.gz*")
+        // tuple path("${strain}.${date}.vcf.gz"),  path("${strain}.${date}.vcf.gz.tbi"), path("${strain}.${date}.vcf.gz.csi")
 
     """
-        bcftools view -s ${strain} ${vcf} > ${strain}.${date}.vcf
-        bgzip ${strain}.${date}.vcf
-        bcftools index -c ${strain}.${date}.vcf.gz
-        bcftools index -t ${strain}.${date}.vcf.gz
+        bcftools view -s ${strain} ${vcf} > ${strain}.${params.date}.vcf
+        bgzip ${strain}.${params.date}.vcf
+        bcftools index -c ${strain}.${params.date}.vcf.gz
+        bcftools index -t ${strain}.${params.date}.vcf.gz
+
+        # keep both isotype and ref strain
+        if grep -q $strain ${workflow.projectDir}/bin/isotype_ref_strain.tsv; 
+        then
+            new_strain=`grep ${strain} ${workflow.projectDir}/bin/isotype_ref_strain.tsv | awk '{print \$2}'`
+            bcftools reheader --samples ${workflow.projectDir}/bin/isotype_ref_strain.tsv ${strain}.${params.date}.vcf.gz | \\
+            bcftools view -Oz > \$new_strain.20220207.vcf.gz
+
+            bcftools index -c \$new_strain.20220207.vcf.gz
+            bcftools index -t \$new_strain.20220207.vcf.gz
+        fi
 
     """
 
@@ -570,15 +584,15 @@ process snpeff_severity_tracks {
     input:
         tuple path("in.vcf.gz"), path("in.vcf.gz.csi"), val(severity)
     output:
-        set file("${date}.${severity}.bed.gz"), file("${date}.${severity}.bed.gz.tbi")
+        set file("${params.date}.${severity}.bed.gz"), file("${params.date}.${severity}.bed.gz.tbi")
 
     """
         bcftools view --apply-filters PASS in.vcf.gz | \
         grep ${severity} | \
         awk '\$0 !~ "^#" { print \$1 "\\t" (\$2 - 1) "\\t" (\$2)  "\\t" \$1 ":" \$2 "\\t0\\t+"  "\\t" \$2 - 1 "\\t" \$2 "\\t0\\t1\\t1\\t0" }' | \\
-        bgzip  > ${date}.${severity}.bed.gz
-        tabix -p bed ${date}.${severity}.bed.gz
-        fsize=\$(zcat ${date}.${severity}.bed.gz | wc -c)
+        bgzip  > ${params.date}.${severity}.bed.gz
+        tabix -p bed ${params.date}.${severity}.bed.gz
+        fsize=\$(zcat ${params.date}.${severity}.bed.gz | wc -c)
         if [ \${fsize} -lt 2000 ]; then
             exit 1
         fi;
@@ -597,15 +611,15 @@ process bcsq_severity_tracks {
     input:
         tuple path("flatfile"), val(severity)
     output:
-        tuple file("${date}.${severity}.bed.gz"), file("${date}.${severity}.bed.gz.tbi")
+        tuple file("${params.date}.${severity}.bed.gz"), file("${params.date}.${severity}.bed.gz.tbi")
 
     """
         cat ${flatfile} | \
         grep ${severity} | \
         awk '\$0 !~ "^#" { print \$1 "\\t" (\$2 - 1) "\\t" (\$2)  "\\t" \$1 ":" \$2 "\\t0\\t+"  "\\t" \$2 - 1 "\\t" \$2 "\\t0\\t1\\t1\\t0" }' | \\
-        bgzip  > ${date}.${severity}.bed.gz
-        tabix -p bed ${date}.${severity}.bed.gz
-        fsize=\$(zcat ${date}.${severity}.bed.gz | wc -c)
+        bgzip  > ${params.date}.${severity}.bed.gz
+        tabix -p bed ${params.date}.${severity}.bed.gz
+        fsize=\$(zcat ${params.date}.${severity}.bed.gz | wc -c)
         if [ \${fsize} -lt 2000 ]; then
             exit 1
         fi;
