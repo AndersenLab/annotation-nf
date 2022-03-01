@@ -1,0 +1,10 @@
+name: annotation
+channels:
+- r
+- defaults
+- conda-forge
+- bioconda
+dependencies:
+  - bcftools=1.14
+  - snpEff=4.3.1t
+  - vcfanno=0.3.2 
