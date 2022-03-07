@@ -219,7 +219,8 @@ workflow {
 
 process snpeff_annotate_vcf {
 
-    conda "/projects/b1059/software/conda_envs/popgen-nf_env"
+    // conda "/projects/b1059/software/conda_envs/popgen-nf_env"
+    label 'annotation'
 
     publishDir "${params.output}/variation", mode: 'copy', pattern: '*.snpeff.vcf*'
     publishDir "${params.output}/variation", mode: 'copy', pattern: 'snpeff.stats.csv'
@@ -272,7 +273,8 @@ process snpeff_annotate_vcf {
 process bcsq_annotate_vcf {
 
     // bcsq needs bcftools=1.12 to work properly
-    conda "/projects/b1059/software/conda_envs/bcftools"
+    // conda "/projects/b1059/software/conda_envs/bcftools"
+    label 'annotation'
 
     memory 16.GB
 
@@ -304,7 +306,8 @@ process bcsq_annotate_vcf {
 
 process prep_other_annotation {
 
-    conda "/projects/b1059/software/conda_envs/popgen-nf-r_env"
+    // conda "/projects/b1059/software/conda_envs/popgen-nf-r_env"
+    label 'R'
     echo true
     memory 16.GB
 
@@ -325,7 +328,8 @@ process prep_other_annotation {
 
 process AA_annotate_vcf {
 
-    conda "/projects/b1059/software/conda_envs/popgen-nf_env"
+    // conda "/projects/b1059/software/conda_envs/popgen-nf_env"
+    label 'annotation'
 
     publishDir "${params.output}/variation", mode: 'copy'
 
@@ -358,7 +362,8 @@ process AA_annotate_vcf {
 process bcsq_extract_samples {
 
 
-    conda "/projects/b1059/software/conda_envs/bcftools"
+    // conda "/projects/b1059/software/conda_envs/bcftools"
+    label 'annotation'
 
     memory 16.GB
 
@@ -382,7 +387,8 @@ process bcsq_extract_samples {
 process bcsq_extract_scores {
 
 
-    conda "/projects/b1059/software/conda_envs/bcftools"
+    // conda "/projects/b1059/software/conda_envs/bcftools"
+    label 'annotation'
 
     memory 16.GB
 
@@ -405,7 +411,8 @@ process bcsq_extract_scores {
 process bcsq_parse_scores {
 
 
-    conda "/projects/b1059/software/conda_envs/popgen-nf-r_env"
+    // conda "/projects/b1059/software/conda_envs/popgen-nf-r_env"
+    label 'R'
 
     memory 16.GB
 
@@ -424,7 +431,8 @@ process bcsq_parse_scores {
 process bcsq_parse_samples {
 
 
-    conda "/projects/b1059/software/conda_envs/popgen-nf-r_env"
+    // conda "/projects/b1059/software/conda_envs/popgen-nf-r_env"
+    label 'R'
 
     memory 64.GB
 
@@ -443,7 +451,8 @@ process bcsq_parse_samples {
 process make_flat_file {
 
 
-    conda "/projects/b1059/software/conda_envs/popgen-nf-r_env"
+    // conda "/projects/b1059/software/conda_envs/popgen-nf-r_env"
+    label 'R'
     publishDir "${params.output}/variation", mode: 'copy'
 
     //memory 16.GB
@@ -475,7 +484,8 @@ process make_flat_file {
 
 process strain_list {
 
-    conda "/projects/b1059/software/conda_envs/popgen-nf_env"
+    // conda "/projects/b1059/software/conda_envs/popgen-nf_env"
+    label 'annotation'
 
     input:
         tuple path(vcf), path(vcf_index)
@@ -492,7 +502,8 @@ process strain_list {
 process generate_strain_vcf {
     // Generate a single VCF for every strain.
 
-    conda "/projects/b1059/software/conda_envs/popgen-nf_env"
+    // conda "/projects/b1059/software/conda_envs/popgen-nf_env"
+    label 'annotation'
 
     tag { strain }
 
@@ -575,7 +586,8 @@ process snpeff_severity_tracks {
         They are used on the CeNDR browser. Previous CeNDR browser used soft filtered vcf, this one uses hard filtered vcf
     */
 
-    conda "/projects/b1059/software/conda_envs/popgen-nf_env"
+    // conda "/projects/b1059/software/conda_envs/popgen-nf_env"
+    label 'annotation'
 
     publishDir "${params.output}/tracks/snpeff/", mode: 'copy'
 
@@ -602,7 +614,8 @@ process snpeff_severity_tracks {
 
 process bcsq_severity_tracks {
 
-    conda "/projects/b1059/software/conda_envs/popgen-nf_env"
+    // conda "/projects/b1059/software/conda_envs/popgen-nf_env"
+    label 'annotation'
 
     publishDir "${params.output}/tracks/bcsq/", mode: 'copy'
 
