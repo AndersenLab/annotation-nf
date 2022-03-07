@@ -1,3 +1,5 @@
+![Build Docker (env/annotation.Dockerfile)](https://github.com/AndersenLab/annotation-nf/workflows/Build%20Docker%20(env/annotation.Dockerfile)/badge.svg)
+
 # annotation-nf
 
 Annotate VCF with snpeff and bcsq
@@ -118,3 +120,7 @@ This parameter is necessary for correct annotation using BCSQ for variants with 
  
 ```
 
+# Relevant Docker Images
+
+* `andersenlab/annotation` ([link](https://hub.docker.com/r/andersenlab/annotation)): Docker image is created within this pipeline using GitHub actions. Whenever a change is made to `env/annotation.Dockerfile` or `.github/workflows/build_docker.yml` GitHub actions will create a new docker image and push if successful
+* `andersenlab/r_packages` ([link](https://hub.docker.com/r/andersenlab/r_packages)): Docker image is created manually, code can be found in the [dockerfile](https://github.com/AndersenLab/dockerfile/tree/master/r_packages) repo.
