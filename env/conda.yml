@@ -8,3 +8,4 @@ dependencies:
   - bcftools=1.14
   - snpEff=4.3.1t
   - vcfanno=0.3.2 
+  - bedtools
