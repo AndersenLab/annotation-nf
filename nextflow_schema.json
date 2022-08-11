@@ -1,0 +1,98 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://raw.githubusercontent.com/./master/nextflow_schema.json",
+    "title": "annotation-nf pipeline parameters",
+    "description": "",
+    "type": "object",
+    "definitions": {
+        "input_output": {
+            "title": "Input/Output",
+            "type": "object",
+            "description": "",
+            "default": "",
+            "properties": {
+                "vcf": {
+                    "type": "string"
+                },
+                "divergent_regions": {
+                    "type": "string"
+                },
+                "output": {
+                    "type": "string"
+                },
+                "debug": {
+                    "type": "boolean"
+                }
+            },
+            "fa_icon": "fas fa-terminal"
+        },
+        "parameters": {
+            "title": "Parameters",
+            "type": "object",
+            "description": "",
+            "default": "",
+            "properties": {
+                "ncsq_param": {
+                    "type": "number",
+                    "hidden": true
+                },
+                "project": {
+                    "type": "string",
+                    "hidden": true
+                },
+                "ws_build": {
+                    "type": "string",
+                    "hidden": true
+                },
+                "reference": {
+                    "type": "string",
+                    "hidden": true
+                },
+                "snpeff_reference": {
+                    "type": "string",
+                    "hidden": true
+                },
+                "snpeff_dir": {
+                    "type": "string",
+                    "hidden": true
+                },
+                "csq_gff": {
+                    "type": "string",
+                    "hidden": true
+                },
+                "AA_score": {
+                    "type": "string",
+                    "hidden": true
+                },
+                "AA_length": {
+                    "type": "string",
+                    "hidden": true
+                },
+                "dust_bed": {
+                    "type": "string",
+                    "hidden": true
+                },
+                "repeat_masker_bed": {
+                    "type": "string",
+                    "hidden": true
+                },
+                "snpeff_vcfanno_config": {
+                    "type": "string",
+                    "hidden": true
+                },
+                "bcsq_vcfanno_config": {
+                    "type": "string",
+                    "hidden": true
+                }
+            }
+        }
+    },
+    "allOf": [
+        {
+            "$ref": "#/definitions/input_output"
+        },
+        {
+            "$ref": "#/definitions/parameters"
+        }
+    ]
+}
