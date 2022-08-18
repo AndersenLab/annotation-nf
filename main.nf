@@ -3,6 +3,7 @@
     Authors:
     - Dan Lu <dan.lu@northwestern.edu>
     - Katie Evans <kathrynevans2015@u.northwestern.edu>
+    - Ryan McKeown <ryanmckeown2021@u.northwestern.edu>
 */
 
 nextflow.preview.dsl=2
@@ -54,7 +55,7 @@ params.snpeff_reference = "${params.species}.${params.project}.${params.ws_build
 params.snpeff_dir = "${reference_dir}/snpeff"
 snpeff_config = "${reference_dir}/snpeff/snpEff.config"
 
-params.csq_gff = "${reference_dir}/csq/${params.species}.${params.project}.${params.ws_build}.csq.gff3.gz"
+params.csq_gff = "${reference_dir}/csq/${params.species}.${params.project}.${params.ws_build}.csq.gff3.gz" 
 params.AA_score = "${reference_dir}/csq/${params.species}.${params.project}.${params.ws_build}.AA_Scores.tsv"
 params.AA_length = "${reference_dir}/csq/${params.species}.${params.project}.${params.ws_build}.AA_Length.tsv"
 
