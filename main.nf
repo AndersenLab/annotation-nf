@@ -55,7 +55,8 @@ params.snpeff_reference = "${params.species}.${params.project}.${params.ws_build
 params.snpeff_dir = "${reference_dir}/snpeff"
 snpeff_config = "${reference_dir}/snpeff/snpEff.config"
 
-params.csq_gff = "${reference_dir}/csq/${params.species}.${params.project}.${params.ws_build}.csq.gff3.gz" 
+/* params.csq_gff = "${reference_dir}/csq/${params.species}.${params.project}.${params.ws_build}.csq.gff3.gz" */
+params.csq_gff = "/projects/b1059/projects/Ryan/protein_structure/ben_1_convergence/annotate_cb/cb_reformatted.gff"
 params.AA_score = "${reference_dir}/csq/${params.species}.${params.project}.${params.ws_build}.AA_Scores.tsv"
 params.AA_length = "${reference_dir}/csq/${params.species}.${params.project}.${params.ws_build}.AA_Length.tsv"
 
@@ -221,7 +222,7 @@ workflow {
 process snpeff_annotate_vcf {
 
     // conda "/projects/b1059/software/conda_envs/popgen-nf_env"
-    label 'annotation'
+    label 'snpeff'
 
     publishDir "${params.output}/variation", mode: 'copy', pattern: '*.snpeff.vcf*'
     publishDir "${params.output}/variation", mode: 'copy', pattern: 'snpeff.stats.csv'
