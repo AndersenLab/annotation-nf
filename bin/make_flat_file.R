@@ -52,7 +52,7 @@ name_key <- data.table::fread(args[3]) %>%
   dplyr::mutate(gene_name = ifelse(str_detect(gene_name, "\\."), #Fix transcript name being used as gene name 
       str_extract(gene_name, pattern = "\\w+\\.\\d"), 
       gene_name)) %>% 
-  dplyr::unique()
+  dplyr::distinct()
 
 add_gene <- cleaned_flat_file %>%
   dplyr::left_join(name_key, by = c( "GENE" = "wbgene")) %>%
