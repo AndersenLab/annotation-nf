@@ -62,9 +62,15 @@ params.AA_length = "${reference_dir}/csq/${params.species}.${params.project}.${p
 if(params.species == "c_elegans") {
     params.dust_bed = "${reference_dir}/lcr/${params.species}.${params.project}.${params.ws_build}.dust.bed.gz"
     params.repeat_masker_bed = "${reference_dir}/lcr/${params.species}.${params.project}.${params.ws_build}.repeat_masker.bed.gz"
-} else {
+    params.gene_names="${reference_dir}/csq/wormbase_name_key.txt"
+
+} else if(params.species == "c_briggsae") {
+    params.gene_names="${reference_dir}/csq/QX1410.R1.current.geneIDs.txt"
+
+} else if(params.species == "c_tropicalis") {
     params.dust_bed = "/projects/b1059/data/c_tropicalis/WI/divergent_regions/20210901/divergent_regions_strain.bed"
     params.repeat_masker_bed = "/projects/b1059/data/c_tropicalis/WI/divergent_regions/20210901/divergent_regions_strain.bed"
+    params.gene_names="${reference_dir}/csq/"
 }
 
 
@@ -184,7 +190,7 @@ workflow {
 
     bcsq_parse_samples.out
     	.combine(bcsq_parse_scores.out)
-        .combine(Channel.fromPath("${reference_dir}/csq/${params.species}.gff"))
+        .combine(Channel.fromPath(params.gene_names)
         .combine(snpeff_annotate_vcf.out.snpeff_flat) | make_flat_file
     	// .combine(Channel.fromPath("${workflow.projectDir}/bin/wormbase_name_key.txt")) | make_flat_file
 
