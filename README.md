@@ -103,6 +103,63 @@ By default, the reference genome is set by the species parameter. If you don't w
 
 This parameter is necessary for correct annotation using BCSQ for variants with many different annotations (like found in divergent regions). In 20210121 we found that the default value of `224` was sufficient, but as more strains are added this number might need to increase. If there is an issue, you should see a warning error from BCFtools and they should suggest what to change this parameter to.
 
+# CSQ compatible GFFs
+
+There are a few specific change that need to be made to the GFF to use CSQ. These additions are made with the following script
+
+
+```{}
+library(tidyverse)
+
+
+#gff_file <- "/projects/b1059/projects/Ryan/protein_structure/ben_1_convergence/annotate_cb/gffs/c_briggsae/test.gff"
+
+fix_mRNA <- function(ID, Parent){
+  transcript_id <- strsplit(ID, "=")[[1]][2]
+  gene_id <- strsplit(Parent, "=")[[1]][2]
+  
+  new_at <- glue::glue("ID={transcript_id};Parent={gene_id};biotype=protein_coding")
+  return(new_at)
+} 
+
+
+add_mrna_biotype <- function(gff_file, transcript_type = "mRNA"){
+    
+    gff_cols <- c("chrm_id", "source", "type", "start", "end", "score", "strand", "phase", "attributes") 
+    
+    gff <- data.table::fread(gff_file, header = FALSE, col.names = gff_cols)  #Separate the attribute column
+    
+    mrna_features <- gff  %>%
+        dplyr::filter(type == transcript_type)  %>% 
+        separate(attributes, sep=";", into = c("ID", "Parent")) %>% 
+        dplyr::mutate(attributes = map2_chr(ID, Parent, fix_mRNA)) %>% 
+        select(-ID, -Parent)
+
+    #return(mrna_features)
+    other_features <- gff  %>%
+        dplyr::filter(type != transcript_type)  
+
+    reformatted <- bind_rows(mrna_features, other_features)
+    
+
+    #name and save output file
+    today <- format(Sys.time(), '%Y%m%d')
+    file_id <- basename(gff_file)
+    write_tsv(reformatted, glue::glue("{file_id}_reformatted_{today}.gff"), col_names = FALSE)
+     
+
+
+}
+
+ct_gff = "/projects/b1059/projects/Ryan/protein_structure/ben_1_convergence/annotate_cb/gffs/c_tropicalis/NIC58.final_annotation.fixed.CSQ.gff"
+cb_gff = "/projects/b1059/projects/Ryan/protein_structure/ben_1_convergence/annotate_cb/gffs/c_briggsae/Curation-VF-230214.PC.clean.renamed.csq.gff3"
+
+#Transcript type allows the "type" column in the gff to be dynamic 
+add_mrna_biotype(ct_gff, transcript_type = "transcript")
+add_mrna_biotype(cb_gff, transcript_type = "mRNA")
+```
+As of 05/02/23 these files are in the respective genomes folder on quest
+
 # Output
 
 ```
