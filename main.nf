@@ -37,15 +37,15 @@ if (params.debug) {
 if(params.species == "c_elegans") {
     params.project="PRJNA13758"
     params.ws_build="WS283"
-    params.csq_gff = "/projects/b1059/data/c_elegans/genomes/PRJNA13758/WS283/csq/c_elegans.PRJNA13758.WS283.csq.gff3"
+   // params.csq_gff = "/projects/b1059/data/c_elegans/genomes/PRJNA13758/WS283/csq/c_elegans.PRJNA13758.WS283.csq.gff3"
 } else if(params.species == "c_briggsae") {
     params.project="QX1410_nanopore"
     params.ws_build="Feb2020"
-    params.csq_gff = "/projects/b1059/projects/Ryan/protein_structure/ben_1_convergence/annotate_cb/gffs/c_briggsae/Curation-VF-230214.PC.clean.renamed.csq.gff3_reformatted_20230303.gff"
+   // params.csq_gff = "/projects/b1059/projects/Ryan/protein_structure/ben_1_convergence/annotate_cb/gffs/c_briggsae/Curation-VF-230214.PC.clean.renamed.csq.gff3_reformatted_20230303.gff"
 } else if(params.species == "c_tropicalis") {
     params.project="NIC58_nanopore"
     params.ws_build="June2021"
-    params.csq_gff = "/projects/b1059/projects/Ryan/protein_structure/ben_1_convergence/annotate_cb/gffs/c_tropicalis/NIC58.final_annotation.fixed.CSQ.gff_reformatted_20230303.gff"
+   // params.csq_gff = "/projects/b1059/projects/Ryan/protein_structure/ben_1_convergence/annotate_cb/gffs/c_tropicalis/NIC58.final_annotation.fixed.CSQ.gff_reformatted_20230303.gff"
 }
 
     
