@@ -37,12 +37,15 @@ if (params.debug) {
 if(params.species == "c_elegans") {
     params.project="PRJNA13758"
     params.ws_build="WS283"
+    params.csq_gff = "/projects/b1059/data/c_elegans/genomes/PRJNA13758/WS283/csq/c_elegans.PRJNA13758.WS283.csq.gff3"
 } else if(params.species == "c_briggsae") {
     params.project="QX1410_nanopore"
     params.ws_build="Feb2020"
+    params.csq_gff = "/projects/b1059/projects/Ryan/protein_structure/ben_1_convergence/annotate_cb/gffs/c_briggsae/Curation-VF-230214.PC.clean.renamed.csq.gff3_reformatted_20230303.gff"
 } else if(params.species == "c_tropicalis") {
     params.project="NIC58_nanopore"
     params.ws_build="June2021"
+    params.csq_gff = "/projects/b1059/projects/Ryan/protein_structure/ben_1_convergence/annotate_cb/gffs/c_tropicalis/NIC58.final_annotation.fixed.CSQ.gff_reformatted_20230303.gff"
 }
 
     
@@ -55,7 +58,7 @@ params.snpeff_reference = "${params.species}.${params.project}.${params.ws_build
 params.snpeff_dir = "${reference_dir}/snpeff"
 snpeff_config = "${reference_dir}/snpeff/snpEff.config"
 
-params.csq_gff = "${reference_dir}/csq/${params.species}.${params.project}.${params.ws_build}.csq.gff3.gz" 
+/* params.csq_gff = "${reference_dir}/csq/${params.species}.${params.project}.${params.ws_build}.csq.gff3.gz" */
 params.AA_score = "${reference_dir}/csq/${params.species}.${params.project}.${params.ws_build}.AA_Scores.tsv"
 params.AA_length = "${reference_dir}/csq/${params.species}.${params.project}.${params.ws_build}.AA_Length.tsv"
 
@@ -149,8 +152,9 @@ input_vcf_index = Channel.fromPath("${params.vcf}.tbi")
 // To convert ref strain to isotype names. Note only strains that match the first col will get changed, so won't impact ct and cb.
 isotype_convert_table = Channel.fromPath("${workflow.projectDir}/bin/ref_strain_isotype.tsv") 
 
-workflow { 
+workflow {
 
+    if(params.snpeff){
     // snpeff annotation
     input_vcf.combine(input_vcf_index)
       .combine(Channel.fromPath(params.snpeff_vcfanno_config))
@@ -158,7 +162,7 @@ workflow {
       .combine(Channel.fromPath(params.dust_bed + ".tbi"))
       .combine(Channel.fromPath(params.repeat_masker_bed))
       .combine(Channel.fromPath(params.repeat_masker_bed + ".tbi")) | snpeff_annotate_vcf
-
+    }
     
     // bcsq annotation
     input_vcf.combine(input_vcf_index)
@@ -189,14 +193,22 @@ workflow {
     } else {
         AA_annotate_vcf.out.vcfanno_vcf | bcsq_extract_samples | bcsq_parse_samples
     }
-    
 
-    bcsq_parse_samples.out
-    	.combine(bcsq_parse_scores.out)
-        .combine(Channel.fromPath(params.gene_names))
-        .combine(snpeff_annotate_vcf.out.snpeff_flat) | make_flat_file
+
+
+    if(params.snpeff){
+        bcsq_parse_samples.out
+            .combine(bcsq_parse_scores.out)
+            .combine(Channel.fromPath("${reference_dir}/csq/${params.species}.gff"))
+            .combine(snpeff_annotate_vcf.out.snpeff_flat) | make_flat_file_snpeff
+
     	// .combine(Channel.fromPath("${workflow.projectDir}/bin/wormbase_name_key.txt")) | make_flat_file
-
+    } else {
+        bcsq_parse_samples.out
+            .combine(bcsq_parse_scores.out)
+            .combine(Channel.fromPath(params.gene_names))
+            .combine(Channel.fromPath("${reference_dir}/csq/${params.species}.gff")) | make_flat_file
+    }
       
 	// Generate Strain-level TSV and VCFs. 
 	// note 1: since annotation is only done for isotype-ref strains, here also only include isotype ref strains.
@@ -230,7 +242,7 @@ workflow {
 process snpeff_annotate_vcf {
 
     // conda "/projects/b1059/software/conda_envs/popgen-nf_env"
-    label 'annotation'
+    label 'snpeff'
 
     publishDir "${params.output}/variation", mode: 'copy', pattern: '*.snpeff.vcf*'
     publishDir "${params.output}/variation", mode: 'copy', pattern: 'snpeff.stats.csv'
@@ -442,9 +454,10 @@ process bcsq_parse_samples {
 
 
     // conda "/projects/b1059/software/conda_envs/popgen-nf-r_env"
-    label 'R'
+    label 'parse_samples'
 
-    memory 64.GB
+    // Defined in nextflow.config
+    // memory 80.GB
 
     input:
         tuple file(bcsq_samples), file(div_file)
@@ -458,7 +471,7 @@ process bcsq_parse_samples {
 
 }
 
-process make_flat_file {
+process make_flat_file_snpeff {
 
 
     // conda "/projects/b1059/software/conda_envs/popgen-nf-r_env"
@@ -476,7 +489,7 @@ process make_flat_file {
         path "*.strain-annotation.tsv"
 
     """
-        Rscript --vanilla ${workflow.projectDir}/bin/make_flat_file.R $bcsq_samples_parsed $bcsq_scores $wbgene_names $div_file ${snpeff} ${params.species}
+        Rscript --vanilla ${workflow.projectDir}/bin/make_flat_file_snpeff.R $bcsq_samples_parsed $bcsq_scores $wbgene_names $div_file ${snpeff} ${params.species}
 
         # rename flatfile
         mv WI-annotated-flatfile.tsv WI.${params.date}.strain-annotation.tsv
@@ -484,6 +497,31 @@ process make_flat_file {
 
 }
 
+process make_flat_file {
+
+
+    // conda "/projects/b1059/software/conda_envs/popgen-nf-r_env"
+    label 'R'
+    publishDir "${params.output}/variation", mode: 'copy'
+
+    //memory 16.GB
+
+    memory 48.GB
+
+    input:
+        tuple file(bcsq_samples_parsed), file(div_file), file(bcsq_scores), file(wbgene_names)
+
+    output:
+        file("*.strain-annotation.tsv")
+
+    """
+        Rscript --vanilla ${workflow.projectDir}/bin/make_flat_file.R $bcsq_samples_parsed $bcsq_scores $wbgene_names $div_file ${params.species}
+
+        # rename flatfile
+        mv WI-annotated-flatfile.tsv WI.${params.date}.strain-annotation.tsv
+    """
+
+}
 
 /* 
     ==============================

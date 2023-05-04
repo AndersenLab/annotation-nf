@@ -47,32 +47,19 @@ cleaned_flat_file <- clean_flat_file(strain_variant_score)
 # readr::write_tsv(cleaned_flat_file, "~/projects/b1059/projects/Ryan/csq/flat_file/WI.20210121.hard-filter.isotype.bcsq.20210401.pre.flatfile.tsv")
 
 ##################
-# add gene name - CE has a unique name key that we need to convert to
-if(args[6] == "c_elegans") {
-  name_key <- data.table::fread(args[3]) %>%
-    dplyr::select(wbgene, gene_name)  %>% 
-    dplyr::mutate(gene_name = ifelse(str_detect(gene_name, "\\."), #Fix transcript name being used as gene name 
-        str_extract(gene_name, pattern = "\\w+\\.\\d"), 
-        gene_name)) %>% 
-    dplyr::distinct()
+# add gene name
+name_key <- data.table::fread(args[3]) %>%
+  dplyr::select(wbgene, gene_name)  %>% 
+  dplyr::mutate(gene_name = ifelse(str_detect(gene_name, "\\."), #Fix transcript name being used as gene name 
+      str_extract(gene_name, pattern = "\\w+\\.\\d"), 
+      gene_name)) %>% 
+  dplyr::distinct()
 
-  add_gene <- cleaned_flat_file %>%
-    dplyr::left_join(name_key, by = c( "GENE" = "wbgene")) %>%
-    dplyr::rename("WORMBASE_ID" = "GENE") %>% 
-    dplyr::rename("GENE" = "gene_name")
-} else {
-  name_key <- data.table::fread(args[3]) %>%
-              col.names = c("index", "id", "alt_id", "dupe", "cat1", "cat2"),
-              na.strings = c(NA_character_, ""))%>%
-    dplyr::select(qx_id, alt_id)%>%
-    #if the alt_id is NA, use the qx_id as the gene name if not use the alt_id
-    dplyr::mutate(GENE = ifelse(is.na(alt_id),id, alt_id))
+add_gene <- cleaned_flat_file %>%
+  dplyr::left_join(name_key, by = c( "GENE" = "wbgene")) %>%
+  dplyr::rename("WORMBASE_ID" = "GENE") %>% 
+  dplyr::rename("GENE" = "gene_name")
 
-  add_gene <- cleaned_flat_file %>%
-    dplyr::left_join(name_key, by = c("GENE" = "id")) %>%
-    dplyr::select(-alt_id, -GENE.x)%>%
-    rename(GENE = GENE.y)
-}
 
 # data.table::fwrite(add_gene, "~/projects/b1059/projects/Ryan/csq/flat_file/WI.20210121.hard-filter.isotype.bcsq.20210401.pre.flatfile-gene.tsv")
 
@@ -143,7 +130,7 @@ table_ready <- impacted %>%
 ###################
 # add divergent region flat
 
-if(args[5] == "c_elegans") {
+if(args[6] == "c_elegans") {
     divergent <- data.table::fread(args[4], 
                                    col.names = c("chrom", "start", "end"))
     
@@ -176,16 +163,16 @@ if(args[5] == "c_elegans") {
 
 ##################
 # add snpeff annotation
-#snpeff <- data.table::fread(args[5], sep = " ") %>%
-  #dplyr::rename("CHROM" = "V1", "POS" = "V2", "ID" = "V3", "REF" = "V4", "ALT" = "V5", "QUAL" = "V6", "FILTER" = "V7", "ANNOTATION" = "V8") %>%
-  #tidyr::separate_rows(ANNOTATION, sep = ",") %>%
-  #tidyr::separate("ANNOTATION", into = c("ALLELE", "CONSEQUENCE", "SNPEFF_IMPACT", "GENE", "WORMBASE_ID", "FEATURE_TYPE", "TRANSCRIPT", "RANK", "HGVS.c", "HGVS.p", "cDNA_POS", "cds_POS", "PROTEIN_POS", "DISTANCE", "ERROR"), sep = "\\|") %>%
-  #dplyr::select(CHROM, POS, REF, ALT, WORMBASE_ID, TRANSCRIPT, SNPEFF_IMPACT)
+snpeff <- data.table::fread(args[5], sep = " ") %>%
+  dplyr::rename("CHROM" = "V1", "POS" = "V2", "ID" = "V3", "REF" = "V4", "ALT" = "V5", "QUAL" = "V6", "FILTER" = "V7", "ANNOTATION" = "V8") %>%
+  tidyr::separate_rows(ANNOTATION, sep = ",") %>%
+  tidyr::separate("ANNOTATION", into = c("ALLELE", "CONSEQUENCE", "SNPEFF_IMPACT", "GENE", "WORMBASE_ID", "FEATURE_TYPE", "TRANSCRIPT", "RANK", "HGVS.c", "HGVS.p", "cDNA_POS", "cds_POS", "PROTEIN_POS", "DISTANCE", "ERROR"), sep = "\\|") %>%
+  dplyr::select(CHROM, POS, REF, ALT, WORMBASE_ID, TRANSCRIPT, SNPEFF_IMPACT)
 
 # combine with rest of annotation
-final_flat <- join #%>%
-  #dplyr::left_join(snpeff) %>%
-  #dplyr::select(names(join)[names(join) != "DIVERGENT"], "SNPEFF_IMPACT", "DIVERGENT")
+final_flat <- join %>%
+  dplyr::left_join(snpeff) %>%
+  dplyr::select(names(join)[names(join) != "DIVERGENT"], "SNPEFF_IMPACT", "DIVERGENT")
 
 
 readr::write_tsv(final_flat, "WI-annotated-flatfile.tsv" )
