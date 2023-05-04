@@ -130,7 +130,7 @@ table_ready <- impacted %>%
 ###################
 # add divergent region flat
 
-if(args[5] == "c_elegans") {
+if(args[6] == "c_elegans") {
     divergent <- data.table::fread(args[4], 
                                    col.names = c("chrom", "start", "end"))
     
@@ -163,16 +163,16 @@ if(args[5] == "c_elegans") {
 
 ##################
 # add snpeff annotation
-#snpeff <- data.table::fread(args[5], sep = " ") %>%
-  #dplyr::rename("CHROM" = "V1", "POS" = "V2", "ID" = "V3", "REF" = "V4", "ALT" = "V5", "QUAL" = "V6", "FILTER" = "V7", "ANNOTATION" = "V8") %>%
-  #tidyr::separate_rows(ANNOTATION, sep = ",") %>%
-  #tidyr::separate("ANNOTATION", into = c("ALLELE", "CONSEQUENCE", "SNPEFF_IMPACT", "GENE", "WORMBASE_ID", "FEATURE_TYPE", "TRANSCRIPT", "RANK", "HGVS.c", "HGVS.p", "cDNA_POS", "cds_POS", "PROTEIN_POS", "DISTANCE", "ERROR"), sep = "\\|") %>%
-  #dplyr::select(CHROM, POS, REF, ALT, WORMBASE_ID, TRANSCRIPT, SNPEFF_IMPACT)
+snpeff <- data.table::fread(args[5], sep = " ") %>%
+  dplyr::rename("CHROM" = "V1", "POS" = "V2", "ID" = "V3", "REF" = "V4", "ALT" = "V5", "QUAL" = "V6", "FILTER" = "V7", "ANNOTATION" = "V8") %>%
+  tidyr::separate_rows(ANNOTATION, sep = ",") %>%
+  tidyr::separate("ANNOTATION", into = c("ALLELE", "CONSEQUENCE", "SNPEFF_IMPACT", "GENE", "WORMBASE_ID", "FEATURE_TYPE", "TRANSCRIPT", "RANK", "HGVS.c", "HGVS.p", "cDNA_POS", "cds_POS", "PROTEIN_POS", "DISTANCE", "ERROR"), sep = "\\|") %>%
+  dplyr::select(CHROM, POS, REF, ALT, WORMBASE_ID, TRANSCRIPT, SNPEFF_IMPACT)
 
 # combine with rest of annotation
-final_flat <- join #%>%
-  #dplyr::left_join(snpeff) %>%
-  #dplyr::select(names(join)[names(join) != "DIVERGENT"], "SNPEFF_IMPACT", "DIVERGENT")
+final_flat <- join %>%
+  dplyr::left_join(snpeff) %>%
+  dplyr::select(names(join)[names(join) != "DIVERGENT"], "SNPEFF_IMPACT", "DIVERGENT")
 
 
 readr::write_tsv(final_flat, "WI-annotated-flatfile.tsv" )
