@@ -26,7 +26,7 @@ strain_variant_score <- dplyr::left_join(parsed_sample_BCSQ, parsed_score)
 
 strain_variant_score <- strain_variant_score %>%
   tidyr::separate("ANNOTATION", into = c("CONSEQUENCE", "GENE", "TRANSCRIPT", "BIOTYPE", "STRAND", "AMINO_ACID_CHANGE", "DNA_CHANGE"), sep = "\\|") %>%
-  na_if("NA")
+  dplyr::na_if("NA")
 
 
 #Remove non-single AA substitutions. Make columns integers
@@ -48,9 +48,9 @@ cleaned_flat_file <- clean_flat_file(strain_variant_score)
 
 ##################
 # add gene name - CE has a unique name key that we need to convert to
-if(args[6] == "c_elegans") {
+if(args[5] == "c_elegans") {
   name_key <- data.table::fread(args[3]) %>%
-    dplyr::select(wbgene, gene_name)  %>% 
+    dplyr::select(wbgene = wbgeneID, gene_name = public_name)  %>% 
     dplyr::mutate(gene_name = ifelse(str_detect(gene_name, "\\."), #Fix transcript name being used as gene name 
         str_extract(gene_name, pattern = "\\w+\\.\\d"), 
         gene_name)) %>% 
@@ -61,17 +61,17 @@ if(args[6] == "c_elegans") {
     dplyr::rename("WORMBASE_ID" = "GENE") %>% 
     dplyr::rename("GENE" = "gene_name")
 } else {
-  name_key <- data.table::fread(args[3]) %>%
+  name_key <- data.table::fread(args[3],
               col.names = c("index", "id", "alt_id", "dupe", "cat1", "cat2"),
               na.strings = c(NA_character_, ""))%>%
-    dplyr::select(qx_id, alt_id)%>%
+    dplyr::select(id, alt_id)%>%
     #if the alt_id is NA, use the qx_id as the gene name if not use the alt_id
     dplyr::mutate(GENE = ifelse(is.na(alt_id),id, alt_id))
 
   add_gene <- cleaned_flat_file %>%
-    dplyr::left_join(name_key, by = c("GENE" = "id")) %>%
-    dplyr::select(-alt_id, -GENE.x)%>%
-    rename(GENE = GENE.y)
+    dplyr::left_join(name_key %>% dplyr::rename(genie = GENE), by = c("GENE" = "id")) %>%
+    dplyr::select(-alt_id, -GENE)%>%
+    dplyr::rename(GENE = genie)
 }
 
 # data.table::fwrite(add_gene, "~/projects/b1059/projects/Ryan/csq/flat_file/WI.20210121.hard-filter.isotype.bcsq.20210401.pre.flatfile-gene.tsv")

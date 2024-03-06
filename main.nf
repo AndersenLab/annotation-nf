@@ -71,12 +71,11 @@ if(params.species == "c_elegans") {
 // THESE ARE NOT THE CORRECT FILES - THIS WAS HOW CB WAS RUN IN THE PAST - NEED TO UPDATE
     params.dust_bed = "/projects/b1059/data/c_tropicalis/WI/divergent_regions/20210901/divergent_regions_strain.bed"
     params.repeat_masker_bed = "/projects/b1059/data/c_tropicalis/WI/divergent_regions/20210901/divergent_regions_strain.bed"
-
-    params.gene_names="${reference_dir}/csq/QX1410.R1.current.geneIDs.txt"
+    params.gene_names="${reference_dir}/csq/QX1410.R2.current.geneIDs.txt"
 } else if(params.species == "c_tropicalis") {
     params.dust_bed = "/projects/b1059/data/c_tropicalis/WI/divergent_regions/20210901/divergent_regions_strain.bed"
     params.repeat_masker_bed = "/projects/b1059/data/c_tropicalis/WI/divergent_regions/20210901/divergent_regions_strain.bed"
-    params.gene_names="${reference_dir}/csq/"
+    params.gene_names="${reference_dir}/csq/NIC58.R2.current.geneIDs.txt"
 }
 
 
