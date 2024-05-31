@@ -163,7 +163,9 @@ workflow {
       .combine(Channel.fromPath(params.dust_bed))
       .combine(Channel.fromPath(params.dust_bed + ".tbi"))
       .combine(Channel.fromPath(params.repeat_masker_bed))
-      .combine(Channel.fromPath(params.repeat_masker_bed + ".tbi")) | snpeff_annotate_vcf
+      .combine(Channel.fromPath(params.repeat_masker_bed + ".tbi"))
+      .combine(Channel.fromPath(params.snpeff_dir + "/snpEff.config"))
+      .combine(Channel.fromPath(params.snpeff_dir)) | snpeff_annotate_vcf
     }
     
     // bcsq annotation
@@ -256,7 +258,9 @@ process snpeff_annotate_vcf {
               path("dust.bed.gz"), \
               path("dust.bed.gz.tbi"), \
               path("repeat_masker.bed.gz"), \
-              path("repeat_masker.bed.gz.tbi")
+              path("repeat_masker.bed.gz.tbi") \
+              path(snpeff_config) \
+              path(dataDir)
 
     output:
         tuple path("*.snpeff.vcf.gz"), path("*.snpeff.vcf.gz.tbi"), emit: snpeff_vcf
