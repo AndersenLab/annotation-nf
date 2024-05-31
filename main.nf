@@ -163,7 +163,9 @@ workflow {
       .combine(Channel.fromPath(params.dust_bed))
       .combine(Channel.fromPath(params.dust_bed + ".tbi"))
       .combine(Channel.fromPath(params.repeat_masker_bed))
-      .combine(Channel.fromPath(params.repeat_masker_bed + ".tbi")) | snpeff_annotate_vcf
+      .combine(Channel.fromPath(params.repeat_masker_bed + ".tbi"))
+      .combine(Channel.fromPath(params.reference))
+      .combine(Channel.fromPath(params.reference + ".fai")) | snpeff_annotate_vcf
     }
     
     // bcsq annotation
@@ -302,7 +304,7 @@ process bcsq_annotate_vcf {
     label 'md'
 
     input:
-        tuple file(vcf), file(vcf_index), file(gff)
+        tuple file(vcf), file(vcf_index), file(gff), file(reference), file(reference_index)
 
 
     output:
@@ -315,7 +317,7 @@ process bcsq_annotate_vcf {
         cp $gff csq.gff.gz
         # tabix -p gff csq.gff.gz
 
-        bcftools csq -O z --fasta-ref ${params.reference} \\
+        bcftools csq -O z --fasta-ref $reference \\
                      --gff-annot csq.gff.gz \\
                      --ncsq ${params.ncsq_param} \\
                      --phase a $vcf > bcsq.vcf.gz
