@@ -19,12 +19,14 @@ if (params.debug) {
     //params.sample_sheet = "${workflow.projectDir}/test_data/sample_sheet.tsv"
     params.output = "annotation-${params.date}-debug"
     params.divergent_regions = "${workflow.projectDir}/test_data/divergent_regions_strain.bed"
+    params.species = "c_elegans"
 
 } else {
     // Read input
     params.vcf = null
     //params.sample_sheet = ""
     params.divergent_regions = null
+    params.species = null
 
     // folder for the bam files. currently need to put all bam in the same folder
     params.bam_folder = "${params.dataDir}/${params.species}/WI/alignments/"
@@ -45,6 +47,9 @@ if(params.species == "c_elegans") {
     params.project="NIC58_nanopore"
     params.ws_build="June2021"
    // params.csq_gff = "/projects/b1059/projects/Ryan/protein_structure/ben_1_convergence/annotate_cb/gffs/c_tropicalis/NIC58.final_annotation.fixed.CSQ.gff_reformatted_20230303.gff"
+} else {
+    params.project = null
+    params.ws_build = null
 }
 
     
