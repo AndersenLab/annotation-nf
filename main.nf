@@ -163,14 +163,14 @@ workflow {
       .combine(Channel.fromPath(params.dust_bed))
       .combine(Channel.fromPath(params.dust_bed + ".tbi"))
       .combine(Channel.fromPath(params.repeat_masker_bed))
-      .combine(Channel.fromPath(params.repeat_masker_bed + ".tbi"))
-      .combine(Channel.fromPath(params.reference))
-      .combine(Channel.fromPath(params.reference + ".fai")) | snpeff_annotate_vcf
+      .combine(Channel.fromPath(params.repeat_masker_bed + ".tbi")) | snpeff_annotate_vcf
     }
     
     // bcsq annotation
     input_vcf.combine(input_vcf_index)
-      .combine(Channel.fromPath(params.csq_gff)) | bcsq_annotate_vcf
+      .combine(Channel.fromPath(params.csq_gff))
+      .combine(Channel.fromPath(params.reference))
+      .combine(Channel.fromPath(params.reference + ".fai")) | bcsq_annotate_vcf
 
     // add blossum and perc protein etc. to vcf
     bcsq_annotate_vcf.out.bcsq_tsv
