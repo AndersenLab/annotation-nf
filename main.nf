@@ -332,7 +332,6 @@ process prep_other_annotation {
     // conda "/projects/b1059/software/conda_envs/popgen-nf-r_env"
     label 'R'
     label 'md'
-    echo true
 
     input:
         tuple path("WI-BCSQ.tsv"), path("gff_AA_Length.tsv"), path("AA_Scores.tsv")
