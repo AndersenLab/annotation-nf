@@ -15,7 +15,7 @@ args <- commandArgs(trailingOnly = T)
 # args[2] - parsed_score
 # args[3] - wbgene conversion
 # args[4] - divergent
-# args[5] - snpeff
+# args[5] - species
 
 parsed_sample_BCSQ <- data.table::fread(args[1])
 

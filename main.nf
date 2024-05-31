@@ -210,8 +210,7 @@ workflow {
     } else {
         bcsq_parse_samples.out
             .combine(bcsq_parse_scores.out)
-            .combine(Channel.fromPath(params.gene_names))
-            .combine(Channel.fromPath("${reference_dir}/csq/${params.species}.gff")) | make_flat_file
+            .combine(Channel.fromPath(params.gene_names)) | make_flat_file
     }
       
 	// Generate Strain-level TSV and VCFs. 
