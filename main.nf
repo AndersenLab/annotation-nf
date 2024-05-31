@@ -4,16 +4,15 @@
     - Dan Lu <dan.lu@northwestern.edu>
     - Katie Evans <kathrynevans2015@u.northwestern.edu>
     - Ryan McKeown <ryanmckeown2021@u.northwestern.edu>
+    - Mike Sauria <mike.sauria@jhu.edu>
 */
 
-nextflow.preview.dsl=2
-// NXF_VER=20.01.0" Require later version of nextflow
-//assert System.getenv("NXF_VER") == "20.01.0"
+nextflow.enable.dsl=2
+// NXF_VER=23.0" Require later version of nextflow
+//assert System.getenv("NXF_VER") == "23.0"
 
 params.date = new Date().format( 'yyyyMMdd' )
 contigs = Channel.from("I","II","III","IV","V","X")
-params.ncsq_param = 224
-params.help = null
 
 if (params.debug) {
     params.vcf = "${workflow.projectDir}/test_data/WI.20201230.hard-filter.isotype.vcf.gz"
@@ -28,7 +27,7 @@ if (params.debug) {
     params.divergent_regions = null
 
     // folder for the bam files. currently need to put all bam in the same folder
-    params.bam_folder = "/projects/b1059/data/${params.species}/WI/alignments/"
+    params.bam_folder = "${params.dataDir}/${params.species}/WI/alignments/"
 
     params.output = "annotation-${params.date}"
 }
@@ -50,8 +49,7 @@ if(params.species == "c_elegans") {
 
     
 /* Keep these static ~ They should not need to be updated */
-reference_base = "/projects/b1059/data/"
-reference_dir = "${reference_base}/${params.species}/genomes/${params.project}/${params.ws_build}"
+reference_dir = "${params.dataDir}/${params.species}/genomes/${params.project}/${params.ws_build}"
 params.reference = "${reference_dir}/${params.species}.${params.project}.${params.ws_build}.genome.fa.gz"
 
 params.snpeff_reference = "${params.species}.${params.project}.${params.ws_build}"
@@ -69,12 +67,12 @@ if(params.species == "c_elegans") {
 
 } else if(params.species == "c_briggsae") {
 // THESE ARE NOT THE CORRECT FILES - THIS WAS HOW CB WAS RUN IN THE PAST - NEED TO UPDATE
-    params.dust_bed = "/projects/b1059/data/c_tropicalis/WI/divergent_regions/20210901/divergent_regions_strain.bed"
-    params.repeat_masker_bed = "/projects/b1059/data/c_tropicalis/WI/divergent_regions/20210901/divergent_regions_strain.bed"
+    params.dust_bed = "${params.dataDir}/c_tropicalis/WI/divergent_regions/20210901/divergent_regions_strain.bed"
+    params.repeat_masker_bed = "${params.dataDir}/c_tropicalis/WI/divergent_regions/20210901/divergent_regions_strain.bed"
     params.gene_names="${reference_dir}/csq/QX1410.R2.current.geneIDs.txt"
 } else if(params.species == "c_tropicalis") {
-    params.dust_bed = "/projects/b1059/data/c_tropicalis/WI/divergent_regions/20210901/divergent_regions_strain.bed"
-    params.repeat_masker_bed = "/projects/b1059/data/c_tropicalis/WI/divergent_regions/20210901/divergent_regions_strain.bed"
+    params.dust_bed = "${params.dataDir}/c_tropicalis/WI/divergent_regions/20210901/divergent_regions_strain.bed"
+    params.repeat_masker_bed = "${params.dataDir}/c_tropicalis/WI/divergent_regions/20210901/divergent_regions_strain.bed"
     params.gene_names="${reference_dir}/csq/NIC58.R2.current.geneIDs.txt"
 }
 
@@ -240,8 +238,8 @@ workflow {
 
 process snpeff_annotate_vcf {
 
-    // conda "/projects/b1059/software/conda_envs/popgen-nf_env"
     label 'snpeff'
+    label 'ml'
 
     publishDir "${params.output}/variation", mode: 'copy', pattern: '*.snpeff.vcf*'
     publishDir "${params.output}/variation", mode: 'copy', pattern: 'snpeff.stats.csv'
@@ -296,8 +294,7 @@ process bcsq_annotate_vcf {
     // bcsq needs bcftools=1.12 to work properly
     // conda "/projects/b1059/software/conda_envs/bcftools"
     label 'annotation'
-
-    memory 16.GB
+    label 'md'
 
     input:
         tuple file(vcf), file(vcf_index), file(gff)
@@ -329,8 +326,8 @@ process prep_other_annotation {
 
     // conda "/projects/b1059/software/conda_envs/popgen-nf-r_env"
     label 'R'
+    label 'md'
     echo true
-    memory 16.GB
 
     input:
         tuple path("WI-BCSQ.tsv"), path("gff_AA_Length.tsv"), path("AA_Scores.tsv")
@@ -351,10 +348,10 @@ process AA_annotate_vcf {
 
     // conda "/projects/b1059/software/conda_envs/popgen-nf_env"
     label 'annotation'
+    label 'md'
 
     publishDir "${params.output}/variation", mode: 'copy'
 
-    memory 16.GB
 
     input:
         tuple file(vcf), file(vcf_index), file("anno_vcf.vcf"), file(vcfanno), \
@@ -385,8 +382,8 @@ process bcsq_extract_samples {
 
     // conda "/projects/b1059/software/conda_envs/bcftools"
     label 'annotation'
+    label 'md'
 
-    memory 16.GB
 
     input:
         tuple file(bcsq_vcf), file(bcsq_vcf_index), file(divergent_regions)
@@ -410,8 +407,8 @@ process bcsq_extract_scores {
 
     // conda "/projects/b1059/software/conda_envs/bcftools"
     label 'annotation'
+    label 'md'
 
-    memory 16.GB
 
     input:
         tuple file(bcsq_vcf), file(bcsq_vcf_index)
@@ -434,8 +431,7 @@ process bcsq_parse_scores {
 
     // conda "/projects/b1059/software/conda_envs/popgen-nf-r_env"
     label 'R'
-
-    memory 16.GB
+    label 'md'
 
     input:
         file(bcsq_scores)
@@ -454,9 +450,7 @@ process bcsq_parse_samples {
 
     // conda "/projects/b1059/software/conda_envs/popgen-nf-r_env"
     label 'parse_samples'
-
-    // Defined in nextflow.config
-    // memory 80.GB
+    label 'lg'
 
     input:
         tuple file(bcsq_samples), file(div_file)
@@ -475,11 +469,9 @@ process make_flat_file_snpeff {
 
     // conda "/projects/b1059/software/conda_envs/popgen-nf-r_env"
     label 'R'
+    label 'ml'
+
     publishDir "${params.output}/variation", mode: 'copy'
-
-    //memory 16.GB
-
-    memory 48.GB
 
     input:
         tuple file(bcsq_samples_parsed), file(div_file), file(bcsq_scores), file(wbgene_names), file(snpeff)
@@ -501,11 +493,9 @@ process make_flat_file {
 
     // conda "/projects/b1059/software/conda_envs/popgen-nf-r_env"
     label 'R'
+    label 'ml'
+
     publishDir "${params.output}/variation", mode: 'copy'
-
-    //memory 16.GB
-
-    memory 48.GB
 
     input:
         tuple file(bcsq_samples_parsed), file(div_file), file(bcsq_scores), file(wbgene_names)
@@ -533,6 +523,7 @@ process strain_list {
 
     // conda "/projects/b1059/software/conda_envs/popgen-nf_env"
     label 'annotation'
+    label 'md'
 
     input:
         tuple path(vcf), path(vcf_index)
@@ -551,6 +542,7 @@ process generate_strain_vcf {
 
     // conda "/projects/b1059/software/conda_envs/popgen-nf_env"
     label 'annotation'
+    label 'md'
 
     tag { strain }
 
@@ -635,6 +627,7 @@ process snpeff_severity_tracks {
 
     // conda "/projects/b1059/software/conda_envs/popgen-nf_env"
     label 'annotation'
+    label 'md'
 
     publishDir "${params.output}/tracks/snpeff/", mode: 'copy'
 
@@ -663,6 +656,7 @@ process bcsq_severity_tracks {
 
     // conda "/projects/b1059/software/conda_envs/popgen-nf_env"
     label 'annotation'
+    label 'md'
 
     publishDir "${params.output}/tracks/bcsq/", mode: 'copy'
 
