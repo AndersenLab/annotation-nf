@@ -29,7 +29,7 @@ if (params.debug) {
     params.species = null
 
     // folder for the bam files. currently need to put all bam in the same folder
-    params.bam_folder = "${params.dataDir}/${params.species}/WI/alignments/"
+    params.bam_folder = "${dataDir}/${params.species}/WI/alignments/"
 
     params.output = "annotation-${params.date}"
 }
@@ -54,7 +54,7 @@ if(params.species == "c_elegans") {
 
     
 /* Keep these static ~ They should not need to be updated */
-reference_dir = "${params.dataDir}/${params.species}/genomes/${params.project}/${params.ws_build}"
+reference_dir = "${dataDir}/${params.species}/genomes/${params.project}/${params.ws_build}"
 params.reference = "${reference_dir}/${params.species}.${params.project}.${params.ws_build}.genome.fa.gz"
 
 params.snpeff_reference = "${params.species}.${params.project}.${params.ws_build}"
@@ -72,12 +72,12 @@ if(params.species == "c_elegans") {
 
 } else if(params.species == "c_briggsae") {
 // THESE ARE NOT THE CORRECT FILES - THIS WAS HOW CB WAS RUN IN THE PAST - NEED TO UPDATE
-    params.dust_bed = "${params.dataDir}/c_tropicalis/WI/divergent_regions/20210901/divergent_regions_strain.bed"
-    params.repeat_masker_bed = "${params.dataDir}/c_tropicalis/WI/divergent_regions/20210901/divergent_regions_strain.bed"
+    params.dust_bed = "${dataDir}/c_tropicalis/WI/divergent_regions/20210901/divergent_regions_strain.bed"
+    params.repeat_masker_bed = "${dataDir}/c_tropicalis/WI/divergent_regions/20210901/divergent_regions_strain.bed"
     params.gene_names="${reference_dir}/csq/QX1410.R2.current.geneIDs.txt"
 } else if(params.species == "c_tropicalis") {
-    params.dust_bed = "${params.dataDir}/c_tropicalis/WI/divergent_regions/20210901/divergent_regions_strain.bed"
-    params.repeat_masker_bed = "${params.dataDir}/c_tropicalis/WI/divergent_regions/20210901/divergent_regions_strain.bed"
+    params.dust_bed = "${dataDir}/c_tropicalis/WI/divergent_regions/20210901/divergent_regions_strain.bed"
+    params.repeat_masker_bed = "${dataDir}/c_tropicalis/WI/divergent_regions/20210901/divergent_regions_strain.bed"
     params.gene_names="${reference_dir}/csq/NIC58.R2.current.geneIDs.txt"
 }
 
