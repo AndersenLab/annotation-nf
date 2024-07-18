@@ -258,8 +258,8 @@ process snpeff_annotate_vcf {
               path("dust.bed.gz"), \
               path("dust.bed.gz.tbi"), \
               path("repeat_masker.bed.gz"), \
-              path("repeat_masker.bed.gz.tbi") \
-              path(snpeff_config) \
+              path("repeat_masker.bed.gz.tbi"), \
+              path(snpeff_config), \
               path(dataDir)
 
     output:
