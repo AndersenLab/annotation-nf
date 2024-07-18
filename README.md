@@ -54,14 +54,14 @@ Make sure that you add the following code to your `~/.bash_profile`. This line m
 export SINGULARITY_CACHEDIR='/vast/eande106/singularity/'
 ```
 
-!!! Note
-	If you need to work with the docker container, you will need to create an interactive session as singularity can't be run on Rockfish login nodes.
-	
-	```
-	interact -n1 -pexpress
-	module load singularity
-	singularity shell [--bind local_dir:container_dir] /vast/eande106/singularity/<image_name>
-	```
+>[!Note]
+>If you need to work with the docker container, you will need to create an interactive session as singularity can't be run on Rockfish login nodes.
+>	
+>```
+>interact -n1 -pexpress
+>module load singularity
+>singularity shell [--bind local_dir:container_dir] /vast/eande106/singularity/<image_name>
+>```
 
 # Usage
 
