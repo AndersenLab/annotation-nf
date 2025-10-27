@@ -23,11 +23,111 @@ jobs:
       uses: elgohr/Publish-Docker-Github-Action@master
       with:
         name: andersenlab/annotation
-        tag: "${{ steps.current-time.formattedTime }}"
+          tag: "${{ steps.current-time.formattedTime }}"
         username: ${{ secrets.KSE_DOCKER_USER }}
         password: ${{ secrets.KSE_DOCKER_PASS }}
         snapshot: true
         dockerfile: annotation.Dockerfile
+        workdir: "env"
+        tags: "latest"
+        cache: true
+
+name: Build Docker (env/annovar.Dockerfile)
+
+on:
+  push:
+    paths:
+    - 'env/annovar.Dockerfile'
+    - '.github/workflows/build_docker.yml'
+    - 'env/conda.yml'
+    - 'scripts/*.pl'
+  pull_request:
+    paths:
+    - 'env/annovar.Dockerfile'
+    - '.github/workflows/build_docker.yml'
+    - 'env/conda.yml'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    # Build Tools
+    - name: Build and Publish
+      uses: elgohr/Publish-Docker-Github-Action@master
+      with:
+        name: andersenlab/annovar
+        tag: "${{ steps.current-time.formattedTime }}"
+        username: ${{ secrets.KSE_DOCKER_USER }}
+        password: ${{ secrets.KSE_DOCKER_PASS }}
+        snapshot: true
+        dockerfile: annovar.Dockerfile
+        workdir: "env"
+        tags: "latest"
+        cache: true
+
+name: Build Docker (env/annovar.Dockerfile)
+
+on:
+  push:
+    paths:
+    - 'env/csq.Dockerfile'
+    - '.github/workflows/build_docker.yml'
+    - 'env/conda.yml'
+  pull_request:
+    paths:
+    - 'env/csq.Dockerfile'
+    - '.github/workflows/build_docker.yml'
+    - 'env/conda.yml'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    # Build Tools
+    - name: Build and Publish
+      uses: elgohr/Publish-Docker-Github-Action@master
+      with:
+        name: andersenlab/csq
+        tag: "${{ steps.current-time.formattedTime }}"
+        username: ${{ secrets.KSE_DOCKER_USER }}
+        password: ${{ secrets.KSE_DOCKER_PASS }}
+        snapshot: true
+        dockerfile: csq.Dockerfile
+        workdir: "env"
+        tags: "latest"
+        cache: true
+
+name: Build Docker (env/snpeff.Dockerfile)
+
+on:
+  push:
+    paths:
+    - 'env/snpeff.Dockerfile'
+    - '.github/workflows/build_docker.yml'
+    - 'env/conda.yml'
+  pull_request:
+    paths:
+    - 'env/snpeff.Dockerfile'
+    - '.github/workflows/build_docker.yml'
+    - 'env/conda.yml'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    # Build Tools
+    - name: Build and Publish
+      uses: elgohr/Publish-Docker-Github-Action@master
+      with:
+        name: andersenlab/snpeff
+        tag: "${{ steps.current-time.formattedTime }}"
+        username: ${{ secrets.KSE_DOCKER_USER }}
+        password: ${{ secrets.KSE_DOCKER_PASS }}
+        snapshot: true
+        dockerfile: snpeff.Dockerfile
         workdir: "env"
         tags: "latest"
         cache: true
