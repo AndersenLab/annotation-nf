@@ -1,6 +1,6 @@
 process BCFTOOLS_STRAIN_MATRIX {
 
-    label "sm"
+    label "mem_mid"
 
     input:
     tuple val(meta), path(vcf), path(vcf_index)

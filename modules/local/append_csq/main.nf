@@ -119,7 +119,7 @@ process LOCAL_APPEND_CSQ {
             print \$1, \$2, \$3, \$4, \$5, \$6, \$7, \$8, \$9, \$10, \$11, \$12, "GRANTHAM,BLOSUM,percent_protein";
         } else {
             if ( \$5 ~ /missense|frameshift|stop|deletion|synonymous|insertion/ ){
-                if (\$5 ~ /missense/) {
+                if (\$5 ~ /^missense\$/) {
                     # Extract amino acid substitution from column 6: e.g. 175D>175N -> D/N
                     match(\$6, /[0-9][A-Z]>/);
                     ref = substr(\$6, RSTART + 1, RLENGTH - 2);

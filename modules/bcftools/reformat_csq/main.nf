@@ -47,6 +47,7 @@ process BCFTOOLS_REFORMAT_CSQ {
                         } else {
                             CSQ_consequence = (csq[1] != "" ? csq[1] : "N/A");
                             CSQ_AA_change = (csq[6] != "" ? csq[6] : "N/A");
+                            gsub(",","",CSQ_AA);
                             DNA_change = (csq[7] != "" ? csq[7] : "N/A");
                             transcript = (csq[3] != "" ? csq[3] : (csq[2] != "" ? csq[2] : "N/A"));
                         }

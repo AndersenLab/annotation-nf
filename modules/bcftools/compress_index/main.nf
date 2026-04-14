@@ -1,5 +1,7 @@
 process BCFTOOLS_COMPRESS_INDEX {
 
+    label "mid"
+
     input:
     tuple val(meta), path(vcf)
 

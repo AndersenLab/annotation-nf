@@ -291,7 +291,7 @@ workflow {
     // Append variant features
     //////////////////////////
 
-    uncompress_ch = PERL_ANNOVAR_ANNOTATION.out.annovar
+    uncompressed_ch = PERL_ANNOVAR_ANNOTATION.out.annovar
         .mix(JAVA_SNPEFF_ANNOTATION.out.snpeff)
         .mix(VEP_ANNOTATION.out.vep)
 

@@ -71,7 +71,7 @@ process BCFTOOLS_REFORMAT_ANNOVAR {
                 }
                 if (length(transcripts) > 0) {
                     # Handle multiple transcripts separated by commas
-                    split(transcripts, transcript_list, "\\\\\\\\x3b");
+                    split(transcripts, transcript_list, ",");
                     for (j = 1; j <= length(transcript_list); j++) {
                         reported = 1;
                         if (transcript_list[j] != "") {
@@ -90,7 +90,7 @@ process BCFTOOLS_REFORMAT_ANNOVAR {
                         }
                     }
                 } else if (length(genes) > 0) {
-                    # Handle multiple transcripts separated by commas
+                    # Handle multiple transcripts separated by semi-colons
                     split(genes, gene_list, "\\\\\\\\x3b");
                     split(ANV_consequence, consequence_list, "\\\\\\\\x3b");
                     for (j = 1; j <= length(gene_list); j++) {
