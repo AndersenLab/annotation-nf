@@ -13,13 +13,13 @@ def main():
             if chrom != "MtDNA":
                 continue
             attributes = {field.split("=")[0]: field.split("=")[1] for field in attributes.split(';') if field != "NA"}
-            gtf_info = {
-                "gene_biotype": attributes["biotype"],
-                "gene_name": attributes.get('sequence_name', ""),
-            }
+            gtf_info = {}
             if biotype == "gene":
+                gtf_info["gene_biotype"] = attributes["biotype"]
+                gtf_info["gene_name"] = attributes.get('sequence_name', "")
                 gtf_info["gene_id"] = attributes['ID'].split(":")[-1]
             elif biotype == "mRNA":
+                gtf_info["gene_biotype"] = attributes["biotype"]
                 gtf_info["gene_id"] = attributes['Parent'].split(":")[-1]
                 biotype = "transcript"
                 gtf_info['transcript_id'] = attributes['ID'].split(':')[-1]
@@ -37,10 +37,11 @@ def main():
                 gtf_info['exon_number'] = str(exon_num)
                 if biotype == "CDS":
                     gtf_info['protein_id'] = attributes['Parent'].split(':')[-1]
-            elif biotype == "tRNA":
+            elif biotype in ["tRNA", "rRNA"]:
+                gtf_info["gene_biotype"] = attributes["biotype"]
                 gtf_info["gene_id"] = attributes['Parent'].split(":")[-1]
                 gtf_info['transcript_id'] = attributes['ID'].split(':')[-1]
-                del gtf_info['gene_name']
+                exons[gtf_info['transcript_id']] = [gtf_info['gene_id'], 0]
             if not biotype in ["CDS", "stop_codon", "start_codon", "exon"]:
                 frame = "."
             gtf_info = "; ".join([f'{k} "{v}"' for k, v in gtf_info.items()])
