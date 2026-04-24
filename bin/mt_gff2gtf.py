@@ -9,6 +9,8 @@ def main():
     cds = {}
     with open(gtf_fname, 'w') as output:
         for line in open(gff_fname):
+            if line.startswith('#'):
+                continue
             chrom, lab, biotype, start, stop, _, strand, frame, attributes = line.rstrip().split("\t")
             if chrom != "MtDNA":
                 continue

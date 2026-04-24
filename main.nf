@@ -62,7 +62,7 @@ if (params.species != null) {
     }
 } else if (params.help == false) {
     if (params.vcf == null || params.gff == null || params.genome == null || params.hdr == null) {
-        println "If no species is specified, valid VCF, GFF, genome, and HDR file paths must be passed using --vcf, --gcf, --genome, and --hdr, respectively"
+        println "If no species is specified, valid VCF, GFF, genome, and HDR file paths must be passed using --vcf, --gff, --genome, and --hdr, respectively"
         exit 1
     } else {
         vcf = params.vcf
@@ -178,10 +178,12 @@ workflow {
     LOCAL_GFF2TSV( gff_ch )
     gff_tsv_ch = LOCAL_GFF2TSV.out.first()
 
-    PYTHON_MT_GFF2GTF( gff_ch,
-                    Channel.fromPath( "${workflow.projectDir}/bin/mt_gff2gtf.py") )
-    ch_versions = ch_versions.mix(PYTHON_MT_GFF2GTF.out.versions)
-    mt_gtf_ch = PYTHON_MT_GFF2GTF.out.gtf
+    if (params.skip_snpeff == false) {
+        PYTHON_MT_GFF2GTF( gff_ch,
+                        Channel.fromPath( "${workflow.projectDir}/bin/mt_gff2gtf.py") )
+        ch_versions = ch_versions.mix(PYTHON_MT_GFF2GTF.out.versions)
+        mt_gtf_ch = PYTHON_MT_GFF2GTF.out.gtf
+    }
 
 
     ///////////////
@@ -273,26 +275,32 @@ workflow {
     // SNPEFF
     ///////////////
 
-    JAVA_SNPEFF_ANNOTATION( mt_vcf_ch,
-                            genome_ch,
-                            mt_gtf_ch,
-                            Channel.fromPath("${workflow.projectDir}/bin/base_snpeff.config") )
-    ch_versions = ch_versions.mix(JAVA_SNPEFF_ANNOTATION.out.versions)
+    if (params.skip_snpeff == false) {
+        JAVA_SNPEFF_ANNOTATION( mt_vcf_ch,
+                                genome_ch,
+                                mt_gtf_ch,
+                                Channel.fromPath("${workflow.projectDir}/bin/base_snpeff.config") )
+        ch_versions = ch_versions.mix(JAVA_SNPEFF_ANNOTATION.out.versions)
+        ch_snpeff_annotation = JAVA_SNPEFF_ANNOTATION.out.snpeff
 
-    BCFTOOLS_REFORMAT_SNPEFF( JAVA_SNPEFF_ANNOTATION.out.snpeff.map { it: [[species: it[0].species, id: "snpeff"], it[1]]} )
-    ch_versions = ch_versions.mix(BCFTOOLS_REFORMAT_SNPEFF.out.versions)
+        BCFTOOLS_REFORMAT_SNPEFF( ch_snpeff_annotation.map { it: [[species: it[0].species, id: "snpeff"], it[1]]} )
+        ch_versions = ch_versions.mix(BCFTOOLS_REFORMAT_SNPEFF.out.versions)
 
-    LOCAL_SNPEFF_MERGE( BCFTOOLS_REFORMAT_SNPEFF.out.tsv,
-                        gff_tsv_ch )
-    merged_snpeff_ch = LOCAL_SNPEFF_MERGE.out
+        LOCAL_SNPEFF_MERGE( BCFTOOLS_REFORMAT_SNPEFF.out.tsv,
+                            gff_tsv_ch )
+        merged_snpeff_ch = LOCAL_SNPEFF_MERGE.out
+    } else {
 
+        ch_snpeff_annotation = channel.empty( )
+        merged_snpeff_ch = channel.of( [] )
+    }
 
     //////////////////////////
     // Append variant features
     //////////////////////////
 
     uncompressed_ch = PERL_ANNOVAR_ANNOTATION.out.annovar
-        .mix(JAVA_SNPEFF_ANNOTATION.out.snpeff)
+        .mix(ch_snpeff_annotation)
         .mix(VEP_ANNOTATION.out.vep)
 
     BCFTOOLS_COMPRESS_INDEX(uncompressed_ch)
@@ -316,8 +324,13 @@ workflow {
     LOCAL_APPEND_VEP( merged_vep_ch,
                       gff_len_ch )
 
-    LOCAL_APPEND_SNPEFF( merged_snpeff_ch,
-                         gff_len_ch )
+    if (params.skip_snpeff == false) {
+        LOCAL_APPEND_SNPEFF( merged_snpeff_ch,
+                            gff_len_ch )
+        ch_appended_snpeff = LOCAL_APPEND_SNPEFF.out
+    } else {
+        ch_appended_snpeff = channel.empty( )
+    }
 
     // Collate and save software versions
         ch_versions
@@ -329,7 +342,7 @@ workflow {
     LOCAL_APPEND_CSQ.out                >> "annotation"
     BCFTOOLS_CSQ_ANNOTATION.out         >> "variation"
     LOCAL_APPEND_VEP.out                >> "annotation"
-    LOCAL_APPEND_SNPEFF.out             >> "annotation"
+    ch_appended_snpeff                  >> "annotation"
     BCFTOOLS_COMPRESS_INDEX.out.indexed >> "variation"
     ch_collated_versions                >> "."
 }
