@@ -292,7 +292,7 @@ workflow {
     } else {
 
         ch_snpeff_annotation = channel.empty( )
-        merged_snpeff_ch = channel.of( [] )
+        merged_snpeff_ch = channel.of( ["none", []] )
     }
 
     //////////////////////////

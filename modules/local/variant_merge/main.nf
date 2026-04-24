@@ -10,11 +10,12 @@ process LOCAL_VARIANT_MERGE {
     path "variant_transcripts.tsv"
 
     script:
+    def snpeff_present=snpeff? "true": "false"
     """
     cut -f 1,2,10 annovar.tsv | grep -v "N/A" > variant_transcripts.tmp
     cut -f 1,2,10 csq.tsv | grep -v "N/A" >> variant_transcripts.tmp
     cut -f 1,2,10 vep.tsv | grep -v "N/A" >> variant_transcripts.tmp
-    if [[ -e ${snpeff} ]]; then
+    if [[ ${snpeff_present} == "true" ]]; then
         cut -f 1,2,9 ${snpeff} | grep -v "N/A" >> variant_transcripts.tmp
     fi
 
